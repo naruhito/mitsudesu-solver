@@ -2,7 +2,7 @@
 
 Simple solver of "Mitsu-desu" game. http://gamingchahan.com/mitsudesu/
 
-`docker` and `vncviewer` on Linux environment are required.
+`docker` and `vncviewer` on Linux environment with display are required.
 
 ```
 ./build.bash
