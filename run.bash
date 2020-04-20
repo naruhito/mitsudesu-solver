@@ -3,6 +3,7 @@ set -e
 
 NAME="mitsudesu-solver"
 IMAGE="${NAME}:latest"
+URL="http://gamingchahan.com/mitsudesu/"
 
 function main() {
   check-requirements
@@ -24,7 +25,7 @@ function check-requirements() {
 }
 
 function create-container() {
-  CONTAINER=$(docker run -d --rm --name ${NAME} -v ${PWD}/docker:/repo ${IMAGE})
+  CONTAINER=$(docker run -d --rm --name ${NAME} -v ${PWD}/docker:/repo -e URL=${URL} ${IMAGE})
   trap "docker rm -f ${CONTAINER}" 0 2 3 15
   while ! docker exec ${CONTAINER} ps | grep x11vnc > /dev/null 2>&1; do
     docker logs ${CONTAINER}

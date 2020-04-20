@@ -1,7 +1,5 @@
 #!/bin/bash
-set -eu
-
-URL="http://gamingchahan.com/mitsudesu/"
+set -e
 
 DISPLAY=:0
 W=1024
@@ -9,6 +7,10 @@ H=768
 D=24
 
 function main() {
+  if [ -z "${URL}" ]; then
+    echo "URL is empty."
+    exit 1
+  fi
   create-display
 }
 

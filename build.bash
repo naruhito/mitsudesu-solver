@@ -1,4 +1,4 @@
 #!/bin/bash
-set -eu
+set -e
 
 docker build -t mitsudesu-solver:latest docker/
