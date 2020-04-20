@@ -4,6 +4,7 @@ set -e
 NAME="mitsudesu-solver"
 IMAGE="${NAME}:latest"
 URL="http://gamingchahan.com/mitsudesu/"
+CONTAINER=""
 
 function main() {
   check-requirements
@@ -34,7 +35,7 @@ function create-container() {
 }
 
 function run-vncviewer() {
-  IP=$(docker inspect ${CONTAINER} | grep -E --color=never "IPAddress.+172" | cut -d\" -f4 | sort | uniq)
+  local IP=$(docker inspect ${CONTAINER} | grep -E --color=never "IPAddress.+172" | cut -d\" -f4 | sort | uniq)
   vncviewer ${IP}
 }
 
