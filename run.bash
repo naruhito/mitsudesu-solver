@@ -1,8 +1,8 @@
 #!/bin/bash
-set -eu
+set -e
 
-IMAGE="mitsudesu-solver:latest"
 NAME="mitsudesu-solver"
+IMAGE="${NAME}:latest"
 
 for PROG in "docker" "vncviewer"; do
   if ! which ${PROG} > /dev/null 2>&1; then
@@ -11,12 +11,18 @@ for PROG in "docker" "vncviewer"; do
   fi
 done
 
-CONTAINER=$(docker run -d --rm --name ${NAME} -h ${NAME} ${IMAGE} -v $PWD/docker:/repo)
+if [ -z "${DISPLAY}" ]; then
+  echo "DISPLAY is not available."
+  exit 1
+fi
+
+CONTAINER=$(docker run -d --rm --name ${NAME} -v ${PWD}/docker:/repo ${IMAGE})
 
 trap "docker rm -f ${CONTAINER}" 0 2 3 15
 
 while ! docker exec ${CONTAINER} ps | grep x11vnc > /dev/null 2>&1; do
   docker logs ${CONTAINER}
+  sleep 1
 done
 
 IP=$(docker inspect ${CONTAINER} | grep -E --color=never "IPAddress.+172" | cut -d\" -f4 | sort | uniq)

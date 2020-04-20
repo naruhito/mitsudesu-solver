@@ -19,7 +19,7 @@ function create-display() {
 }
 
 function run-solver() {
-  DISPLAY=${DISPLAY} python3 /usr/local/bin/solver.py
+  DISPLAY=${DISPLAY} python3 /repo/solver.py
 }
 
 main

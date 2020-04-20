@@ -13,7 +13,4 @@ RUN python3 -m pip install \
   pillow \
   python-xlib
 
-COPY entrypoint.bash /usr/local/bin/entrypoint.bash
-COPY solver.py /usr/local/bin/solver.py
-
-ENTRYPOINT ["/usr/local/bin/entrypoint.bash"]
+ENTRYPOINT ["/repo/entrypoint.bash"]
