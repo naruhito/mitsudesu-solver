@@ -9,8 +9,6 @@ Simple solver of "Mitsu-desu" game. http://gamingchahan.com/mitsudesu/
 ./run.bash
 ```
 
-![cap](images/cap.png)
-
 ## License
 
 The MIT License (MIT)
