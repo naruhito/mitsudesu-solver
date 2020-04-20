@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
-DISPLAY=:0
-W=1024
-H=768
-D=24
+export DISPLAY=:0
+
+export W=1024
+export H=768
+export D=24
 
 function main() {
   if [ -z "${URL}" ]; then
@@ -12,16 +13,17 @@ function main() {
     exit 1
   fi
   create-display
+  run-solver
 }
 
 function create-display() {
-  Xvfb ${DISPLAY} -screen 0 ${W}x${H}x${D} -listen tcp -ac &
+  Xvfb ${DISPLAY} -screen 0 ${W}x${H}x${D} &
   x11vnc -display ${DISPLAY} -listen 0.0.0.0 -forever -xkb -shared -nopw -bg
-  DISPLAY=${DISPLAY} firefox ${URL}
+  firefox ${URL}
 }
 
 function run-solver() {
-  DISPLAY=${DISPLAY} python3 /repo/solver.py
+  python3 /repo/solver.py
 }
 
 main
