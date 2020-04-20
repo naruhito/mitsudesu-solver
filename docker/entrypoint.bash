@@ -19,7 +19,7 @@ function main() {
 function create-display() {
   Xvfb ${DISPLAY} -screen 0 ${W}x${H}x${D} &
   x11vnc -display ${DISPLAY} -listen 0.0.0.0 -forever -xkb -shared -nopw -bg
-  firefox ${URL}
+  firefox ${URL} &
 }
 
 function run-solver() {

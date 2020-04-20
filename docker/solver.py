@@ -15,11 +15,12 @@ window = screen.root
 
 # import IPython; IPython.embed()
 
+from time import sleep
+sleep(5)
+
 rawimage = window.get_image(0, 0, 1024, 768, ZPixmap, 0xFFFFFFFF).data
 image = Image.frombytes('RGB', (1024, 768), rawimage, 'raw', 'RGBX')
 
-from time import sleep
-sleep(5)
 with open('./bbb.png', 'wb') as f:
     Image.fromarray(asarray(image)).save(f, 'PNG')
 
@@ -59,5 +60,5 @@ for i in range(len(contours)):
     cv.rectangle(dstContoursPoly, (int(boundRect[i][0]), int(boundRect[i][1])),
                  (int(boundRect[i][0]+boundRect[i][2]), int(boundRect[i][1]+boundRect[i][3])), color, 2)
 
-cv.imshow('dst', dstContoursPoly)
+cv.imshow('dst', canny)
 cv.waitKey(0)
