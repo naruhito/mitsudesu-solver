@@ -8,9 +8,10 @@ RUN apt update && apt install -y \
   procps
 
 RUN python3 -m pip install \
-  numpy \
   opencv-python \
   pillow \
-  python-xlib
+  numpy \
+  python-xlib \
+  IPython
 
 ENTRYPOINT ["/repo/entrypoint.bash"]
