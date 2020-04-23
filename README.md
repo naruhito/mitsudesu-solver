@@ -1,12 +1,12 @@
-# mitsudesu-solver
+# mitsudesu-solver [![Actions Status](https://github.com/naruhito/mitsudesu-solver/workflows/dockerhub/badge.svg)](https://github.com/naruhito/mitsudesu-solver/workflows/actions) [![Docker Hub](https://images.microbadger.com/badges/version/naruhito/mitsudesu-solver.svg)](https://hub.docker.com/r/naruhito/mitsudesu-solver)
 
 Simple solver of "Mitsu-desu" game. http://gamingchahan.com/mitsudesu/
 
-`docker` and `vncviewer` on Linux environment with display are required.
+Running with docker:
 
 ```
-./build.bash
-./run.bash
+docker pull naruhito/mitsudesu-solver:latest
+docker run naruhito/mitsudesu-solver:latest
 ```
 
 ## License
