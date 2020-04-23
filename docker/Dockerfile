@@ -1,17 +1,16 @@
-FROM python:3.8-slim-buster
+FROM python:3.7-slim-stretch
 
 RUN apt update && apt install -y \
   xvfb \
   x11vnc \
-  firefox-esr \
-  python3-opencv \
-  procps
+  firefox-esr
 
-RUN python3 -m pip install \
+RUN python -m pip install \
   opencv-python \
   pillow \
   numpy \
-  python-xlib \
-  IPython
+  python-xlib
 
-ENTRYPOINT ["/repo/entrypoint.bash"]
+COPY solver.py /usr/local/bin/solver.py
+COPY entrypoint.bash /usr/local/bin/entrypoint.bash
+ENTRYPOINT ["entrypoint.bash"]

@@ -2,6 +2,7 @@
 set -e
 
 export DISPLAY=:0
+export URL="http://gamingchahan.com/mitsudesu/"
 
 function main() {
   if [ -z "${URL}" ]; then
@@ -22,7 +23,7 @@ function create-display() {
 }
 
 function run-solver() {
-  python3 /repo/solver.py
+  python /usr/local/bin/solver.py
 }
 
 main
