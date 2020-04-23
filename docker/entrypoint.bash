@@ -40,7 +40,7 @@ EOS
 }
 
 function run-solver() {
-  python /usr/local/bin/solver.py
+  python /mitsudesu/solver.py
 }
 
 main
