@@ -3,7 +3,8 @@ FROM python:3.7-slim-stretch
 RUN apt update && apt install -y \
   xvfb \
   x11vnc \
-  firefox-esr
+  firefox-esr \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip install \
   opencv-python \
