@@ -6,7 +6,7 @@ Running with docker:
 
 ```
 docker pull naruhito/mitsudesu-solver:latest
-docker run naruhito/mitsudesu-solver:latest
+docker run --rm --name mitsudesu -p 5900:5900 naruhito/mitsudesu-solver:latest
 ```
 
 ## License
