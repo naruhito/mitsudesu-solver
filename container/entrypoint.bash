@@ -2,7 +2,7 @@
 set -e
 
 export DISPLAY=:1
-export URL="http://gamingchahan.com/mitsudesu/"
+readonly URL="http://gamingchahan.com/mitsudesu/"
 
 function main() {
   create-display
@@ -11,16 +11,16 @@ function main() {
 }
 
 function create-display() {
-  local W=1024
-  local H=768
-  local D=24
+  local -r W=1024
+  local -r H=768
+  local -r D=24
   Xvfb ${DISPLAY} -screen 0 ${W}x${H}x${D} &
   x11vnc -display ${DISPLAY} -listen 0.0.0.0 -forever -xkb -shared -nopw -bg
   firefox ${URL} &
 }
 
 function print-help() {
-  local IP=$(hostname -i)
+  local -r IP=$(hostname -i)
   cat <<EOS
 
 ------------------
