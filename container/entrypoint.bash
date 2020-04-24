@@ -40,7 +40,7 @@ EOS
 }
 
 function run-solver() {
-  python /usr/local/bin/solver.py &
+  python /mitsudesu/solver.py &
   PID=$!
   trap "kill -9 ${PID}" 2
   while kill -0 ${PID}; do
