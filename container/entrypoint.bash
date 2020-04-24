@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-export DISPLAY=:0
+export DISPLAY=:1
 readonly URL="http://gamingchahan.com/mitsudesu/"
 
 function main() {
@@ -40,7 +40,12 @@ EOS
 }
 
 function run-solver() {
-  python /usr/local/bin/solver.py
+  python /usr/local/bin/solver.py &
+  PID=$!
+  trap "kill -9 ${PID}" 2
+  while kill -0 ${PID}; do
+    sleep 1
+  done
 }
 
 main
