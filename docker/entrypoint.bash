@@ -20,7 +20,7 @@ function create-display() {
 }
 
 function print-help() {
-  local IP=$(cat /proc/net/fib_trie | grep -B1 '/32 host' | grep 172.17 | awk '{ print $2 }' | sort | uniq)
+  local IP=$(hostname -i)
   cat <<EOS
 
 ------------------
@@ -31,7 +31,7 @@ VNC connection is available:
 
 ${IP}:5900
 
-Client applications are available here:
+Client applications can be downloaded here:
 https://www.realvnc.com/en/connect/download/viewer/
 
 ------------------
