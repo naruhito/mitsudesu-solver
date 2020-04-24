@@ -5,8 +5,8 @@ Simple solver of "Mitsu-desu" game. http://gamingchahan.com/mitsudesu/
 Running with docker:
 
 ```
-docker pull naruhito/mitsudesu-solver:latest
-docker run --rm --name mitsudesu -p 5900:5900 naruhito/mitsudesu-solver:latest
+docker-compose pull
+docker-compose up
 ```
 
 ## License

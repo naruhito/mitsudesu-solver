@@ -1,6 +1,6 @@
 FROM python:3.7-slim-stretch
 
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install --no-install-recommends -y \
   xvfb \
   x11vnc \
   firefox-esr \
