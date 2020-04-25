@@ -12,6 +12,6 @@ RUN python -m pip install \
   numpy \
   python-xlib
 
-COPY solver.py /usr/local/bin/solver.py
+COPY python /mitsudesu
 COPY entrypoint.bash /usr/local/bin/entrypoint.bash
 ENTRYPOINT ["entrypoint.bash"]
