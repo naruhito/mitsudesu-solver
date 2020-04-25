@@ -2,41 +2,47 @@
 # -*- coding: utf-8 -*-
 
 from .x11manager import X11Manager
-from .detector import DetectGameRect
-from .detector import DetectStartButtonRect
-from .mitsudesu import Mitsudesu
+from .detector import Detector
+from .planner import Planner
 
 def Main():
     x11 = X11Manager()
-    gameRect = x11.Wait(stopFn=Detector.DetectGameRect)
-    startButtonRect = x11.Wait(stopFn=Detector.DetectStartButtonRect)
+    detector = Detector()
+    planner = Planner()
 
-    Mitsudesu
-    x11.Click()
+    x11.Wait(breakFn=detector.DetectGameRect)
+    x11.Wait(breakFn=detector.DetectStartButtonNormalRect)
+    startButtonNormalRect = detector.GetStartButtonNormalRect()
+    startNormalAction = planner.PlanStartNormalAction(startButtonNormalRect)
+    x11.ProcessActoin(action=startNormalAction)
 
-    gameRect = WaitDetection(window, DetectGameRect)
-    startButtonRect = WaitDetection(window, DetectStartButtonRect, gameRect=gameRect)
-    ClickStartButton(display, startButtonRect)
-    RepeatSocialDistance(display, gameRect)
-
-def WaitDetection(window, detectionFn, gameRect=None):
-    res = None
-    while res is None:
-        sleep(0.5)
-        image = GetImage(window)
-        res = detectionFn(image, gameRect)
-    return res
-
-def ClickStartButton(display, startButtonRect):
-    x = startButtonRect[0] + startButtonRect[2] / 2.0
-    y = startButtonRect[1] + startButtonRect[3] / 2.0
-    Click(display, x, y)
-
-def RepeatSocialDistance(display, gameRect):
-    x = gameRect[0] + gameRect[2] / 2.0
-    y = gameRect[1] + gameRect[3] / 2.0
     while True:
-        Click(display, x, y)
+        x11.Wait(breakFn=detector.DetectPlayer)
+        x11.Wait(breakFn=detector.DetectLevel)
+        x11.Wait(breakFn=detector.DetectMaskPoints)
+        x11.Wait(breakFn=detector.DetectSocialDistance)
+        x11.Wait(breakFn=detector.DetectEnemies)
+        x11.Wait(breakFn=detector.DetectAvesans)
+        x11.Wait(breakFn=detector.DetectItems)
+        gameRect = detector.GetGameRect()
+        player = detector.GetPlayer()
+        level = detector.GetLevel()
+        maskPoints = detector.GetMaskPoints()
+        socialDistance = detector.GetSocialDistance()
+        enemies = detector.GetEnemies()
+        avesans = detector.GetAvesans()
+        items = detector.GetItems()
+        socialDistanceAction = planner.PlanSocialDistanceAction(
+            gameRect=gameRect,
+            player=player,
+            level=level,
+            maskPoints=maskPoints,
+            socialDistance=socialDistance,
+            enemies=enemies,
+            avesans=avesans,
+            items=items,
+        )
+        x11.ProcessActoin(action=socialDistanceAction)
 
 if __name__ == '__main__':
     Main()

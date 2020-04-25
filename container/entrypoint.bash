@@ -40,7 +40,7 @@ EOS
 }
 
 function run-solver() {
-  python /mitsudesu/solver.py &
+  PYTHONPATH="/mitsudesu:${PYTHONPATH}" python -m mitsudesu.solver &
   PID=$!
   trap "kill -9 ${PID}" 2
   while kill -0 ${PID}; do
