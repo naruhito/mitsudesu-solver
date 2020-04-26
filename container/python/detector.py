@@ -45,6 +45,7 @@ class Detector(object):
     def DetectGameRect(self, image, width=400, height=500, eps=10):
         contours = self.__GetContours(image)
         if len(contours) == 0:
+            self.__gameRect = None
             return False
         centerList, arcLengthList, boundRectList = self.__GetContourProperties(contours)
         contoursPass = []
@@ -57,6 +58,7 @@ class Detector(object):
             contoursPass.append(contour)
             boundRectPass.append(boundRect)
         if len(contoursPass) == 0:
+            self.__gameRect = None
             return False
         self.__gameRect = boundRectPass[0]
         return True
@@ -68,6 +70,7 @@ class Detector(object):
     def DetectStartButtonNormalRect(self, image, width=114, height=53, eps=10):
         contours = self.__GetContours(image)
         if len(contours) == 0:
+            self.__startButtonNormalRect = None
             return False
         centerList, arcLengthList, boundRectList = self.__GetContourProperties(contours)
         contoursPass = []
@@ -92,6 +95,7 @@ class Detector(object):
             contoursPass.append(contour)
             boundRectPass.append(boundRect)
         if len(contoursPass) == 0:
+            self.__startButtonNormalRect = None
             return False
         self.__startButtonNormalRect = boundRectPass[0]
         return True
@@ -119,6 +123,7 @@ class Detector(object):
     def DetectMaskPoints(self, image, eps=10):
         contours = self.__GetContours(image)
         if len(contours) == 0:
+            self.__maskPoints = None
             return False
         centerList, arcLengthList, boundRectList = self.__GetContourProperties(contours)
         contoursPass = []
@@ -135,6 +140,7 @@ class Detector(object):
             contoursPass.append(contour)
             boundRectPass.append(boundRect)
         if len(contoursPass) == 0:
+            self.__maskPoints = None
             return False
         self.__maskPoints = self.__RectsFilter(rects=boundRectPass, minW=20, minH=30)
         return True

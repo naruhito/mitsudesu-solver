@@ -71,7 +71,7 @@ class Solver(object):
     def __ShowDebugImage(self, image, duration=1):
         _display = environ.get('DISPLAY', '')
         environ['DISPLAY'] = self.__displayDebug
-        imshow('detection results', image)
+        imshow('debug', image)
         waitKey(duration)
         environ['DISPLAY'] = _display
 
