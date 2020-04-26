@@ -64,3 +64,9 @@ def RectUnite(a, b):
     w = max(a[0] + a[2], b[0] + b[2]) - x
     h = max(a[1] + a[3], b[1] + b[3]) - y
     return x, y, w, h
+
+def RemoveFloor(image, hsvMin=(0, 0, 185), hsvMax=(0, 0, 195)):
+    hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    mask = 255 - cv.inRange(hsv, hsvMin, hsvMax)
+    imageWithoutFloor = cv.bitwise_and(image, image, None, mask)
+    return imageWithoutFloor

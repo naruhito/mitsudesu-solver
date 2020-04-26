@@ -4,6 +4,7 @@
 from .x11manager import X11Manager
 from .detector import Detector
 from .planner import Planner
+from .utils import RemoveFloor
 
 from argparse import ArgumentParser
 from os import environ
@@ -71,7 +72,7 @@ class Solver(object):
     def __ShowDebugImage(self, image, duration=1):
         _display = environ.get('DISPLAY', '')
         environ['DISPLAY'] = self.__displayDebug
-        imshow('debug', image)
+        imshow('debug', RemoveFloor(image))
         waitKey(duration)
         environ['DISPLAY'] = _display
 
