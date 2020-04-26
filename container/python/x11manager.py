@@ -12,15 +12,20 @@ from numpy import asarray
 
 class X11Manager(object):
 
-    def __init__(self, w=1024, h=768):
-        self.__w = w
-        self.__h = h
-        self.__display = Display()
-        self.__window = self.__display.screen().root
+    def __init__(self, display, width, height):
+        self.__xdisplay = Display(display)
+        self.__window = self.__xdisplay.screen().root
+        self.__width = width
+        self.__height = height
+
+    def GetImage(self):
+        rawImage = self.__window.get_image(0, 0, self.__width, self.__height, ZPixmap, 0xFFFFFFFF).data
+        pilImage = Image.frombytes('RGB', (self.__width, self.__height), rawImage, 'raw', 'RGBX')
+        return asarray(pilImage)
 
     def Wait(self, breakFn):
         while True:
-            image = self.__GetImage()
+            image = self.GetImage()
             if breakFn(image=image):
                 break
             sleep(0.5)
@@ -29,14 +34,9 @@ class X11Manager(object):
         x = int(action[0])
         y = int(action[1])
         duration = action[2]
-        fake_input(self.__display, MotionNotify, x=x, y=y)
-        fake_input(self.__display, ButtonPress, 1)
-        self.__display.sync()
+        fake_input(self.__xdisplay, MotionNotify, x=x, y=y)
+        fake_input(self.__xdisplay, ButtonPress, 1)
+        self.__xdisplay.sync()
         sleep(duration)
-        fake_input(self.__display, ButtonRelease, 1)
-        self.__display.sync()
-
-    def __GetImage(self):
-        rawImage = self.__window.get_image(0, 0, self.__w, self.__h, ZPixmap, 0xFFFFFFFF).data
-        pilImage = Image.frombytes('RGB', (self.__w, self.__h), rawImage, 'raw', 'RGBX')
-        return asarray(pilImage)
+        fake_input(self.__xdisplay, ButtonRelease, 1)
+        self.__xdisplay.sync()

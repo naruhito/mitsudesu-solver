@@ -61,6 +61,10 @@ class Detector(object):
         self.__gameRect = boundRectPass[0]
         return True
 
+    def DrawGameRect(self, image, color=(0, 241, 255), thickness=2):
+        x, y, w, h = self.__gameRect
+        cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
+
     def DetectStartButtonNormalRect(self, image, width=114, height=53, eps=10):
         contours = self.__GetContours(image)
         if len(contours) == 0:
@@ -92,33 +96,65 @@ class Detector(object):
         self.__startButtonNormalRect = boundRectPass[0]
         return True
 
+    def DrawStartButtonNormalRect(self, image, color=(0, 241, 255), thickness=2):
+        x, y, w, h = self.__startButtonNormalRect
+        cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
+
     def DetectPlayer(self, image):
         # TODO
         return True
+
+    def DrawPlayer(self, image):
+        # TODO
+        pass
 
     def DetectLevel(self, image):
         # TODO
         return True
 
+    def DrawLevel(self, image):
+        # TODO
+        pass
+
     def DetectMaskPoints(self, image):
         # TODO
         return True
+
+    def DrawMaskPoints(self, image):
+        # TODO
+        pass
 
     def DetectSocialDistance(self, image):
         # TODO
         return True
 
+    def DrawSocialDistance(self, image):
+        # TODO
+        pass
+
     def DetectEnemies(self, image):
         # TODO
         return True
+
+    def DrawEnemies(self, image):
+        # TODO
+        pass
 
     def DetectAvesans(self, image):
         # TODO
         return True
 
+    def DrawAvesans(self, image):
+        # TODO
+        pass
+
     def DetectItems(self, image):
         # TODO
         return True
+
+    def DrawItems(self, image):
+        # TODO
+        pass
 
     def __GetContours(self, image, thresh=150):
         gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
