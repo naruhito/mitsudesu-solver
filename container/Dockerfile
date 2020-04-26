@@ -14,6 +14,7 @@ RUN python -m pip install \
   pillow \
   python-xlib
 
+COPY data /data
 COPY python /mitsudesu
 COPY entrypoint.bash /usr/local/bin/entrypoint.bash
 ENTRYPOINT ["entrypoint.bash"]
