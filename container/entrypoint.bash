@@ -32,7 +32,7 @@ function create-displays() {
   DISPLAY=${DISPLAYS[1]} firefox ${URL} &
   DISPLAY=${DISPLAYS[0]} fluxbox > /tmp/fluxbox.log 2>&1 &
   DISPLAY=${DISPLAYS[0]} xtigervncviewer localhost::${VNCPORTS[1]} > /tmp/tiger-vncviewer-1.log 2>&1 &
-  DISPLAY=${DISPLAYS[0]} xtigervncviewer localhost::${VNCPORTS[2]} > /tmp/tiger-vncviewer-2.log 2>&1  &
+  DISPLAY=${DISPLAYS[0]} xtigervncviewer localhost::${VNCPORTS[2]} > /tmp/tiger-vncviewer-2.log 2>&1 &
 }
 
 function print-help() {
@@ -60,7 +60,7 @@ function run-solver() {
             --display-width=${W} \
             --display-height=${H} \
             --display-x11=${DISPLAYS[1]} \
-            --display-debug=${DISPLAYS[2]}
+            --display-debug=${DISPLAYS[2]} &
   local -r PID=$!
   trap "kill -9 ${PID}" 2
   while kill -0 ${PID}; do
