@@ -126,28 +126,11 @@ class Detector(object):
 
     def DetectMaskPoints(self, image, eps=10):
         # TODO
-        contours = GetContours(image)
-        if len(contours) == 0:
+        objectRects = self.__DetectObjects(image)
+        if objectRects is None:
             self.__maskPoints = None
             return False
-        centerList, arcLengthList, boundRectList = GetContourProperties(contours)
-        contoursPass = []
-        boundRectPass = []
-        for contour, center, arcLength, boundRect in zip(contours, centerList, arcLengthList, boundRectList):
-            if boundRect[0] < self.__gameRect[0] + eps:
-                continue
-            if boundRect[1] < self.__gameRect[1] + eps:
-                continue
-            if self.__gameRect[0] + self.__gameRect[2] < boundRect[0] + boundRect[2]:
-                continue
-            if self.__gameRect[1] + self.__gameRect[3] < boundRect[1] + boundRect[3]:
-                continue
-            contoursPass.append(contour)
-            boundRectPass.append(boundRect)
-        if len(contoursPass) == 0:
-            self.__maskPoints = None
-            return False
-        self.__maskPoints = RectsFilter(rects=boundRectPass, minW=20, minH=30)
+        self.__maskPoints = objectRects
         return True
 
     def DrawMaskPoints(self, image, color=(0, 241, 255), thickness=2):
@@ -186,3 +169,26 @@ class Detector(object):
     def DrawItems(self, image):
         # TODO
         pass
+
+    def __DetectObjects(self, image, eps=10, minW=20, minH=30):
+        contours = GetContours(image)
+        if len(contours) == 0:
+            return None
+        centerList, arcLengthList, boundRectList = GetContourProperties(contours)
+        contoursPass = []
+        boundRectPass = []
+        for contour, center, arcLength, boundRect in zip(contours, centerList, arcLengthList, boundRectList):
+            if boundRect[0] < self.__gameRect[0] + eps:
+                continue
+            if boundRect[1] < self.__gameRect[1] + eps:
+                continue
+            if self.__gameRect[0] + self.__gameRect[2] < boundRect[0] + boundRect[2]:
+                continue
+            if self.__gameRect[1] + self.__gameRect[3] < boundRect[1] + boundRect[3]:
+                continue
+            contoursPass.append(contour)
+            boundRectPass.append(boundRect)
+        if len(contoursPass) == 0:
+            return None
+        objectRects = RectsFilter(rects=boundRectPass, minW=minW, minH=minH)
+        return objectRects
