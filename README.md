@@ -7,6 +7,7 @@ Running with docker:
 ```
 docker-compose pull
 docker-compose up
+docker-compose rm
 ```
 
 ## License
