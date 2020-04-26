@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from .utils import GetContours
+from .utils import GetContourProperties
+from .utils import RectsFilter
+
 import cv2 as cv
 
 class Detector(object):
@@ -43,11 +47,11 @@ class Detector(object):
         return self.__items
 
     def DetectGameRect(self, image, width=400, height=500, eps=10):
-        contours = self.__GetContours(image)
+        contours = GetContours(image)
         if len(contours) == 0:
             self.__gameRect = None
             return False
-        centerList, arcLengthList, boundRectList = self.__GetContourProperties(contours)
+        centerList, arcLengthList, boundRectList = GetContourProperties(contours)
         contoursPass = []
         boundRectPass = []
         for contour, center, arcLength, boundRect in zip(contours, centerList, arcLengthList, boundRectList):
@@ -68,11 +72,11 @@ class Detector(object):
         cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def DetectStartButtonNormalRect(self, image, width=114, height=53, eps=10):
-        contours = self.__GetContours(image)
+        contours = GetContours(image)
         if len(contours) == 0:
             self.__startButtonNormalRect = None
             return False
-        centerList, arcLengthList, boundRectList = self.__GetContourProperties(contours)
+        centerList, arcLengthList, boundRectList = GetContourProperties(contours)
         contoursPass = []
         boundRectPass = []
         for contour, center, arcLength, boundRect in zip(contours, centerList, arcLengthList, boundRectList):
@@ -121,11 +125,12 @@ class Detector(object):
         pass
 
     def DetectMaskPoints(self, image, eps=10):
-        contours = self.__GetContours(image)
+        # TODO
+        contours = GetContours(image)
         if len(contours) == 0:
             self.__maskPoints = None
             return False
-        centerList, arcLengthList, boundRectList = self.__GetContourProperties(contours)
+        centerList, arcLengthList, boundRectList = GetContourProperties(contours)
         contoursPass = []
         boundRectPass = []
         for contour, center, arcLength, boundRect in zip(contours, centerList, arcLengthList, boundRectList):
@@ -142,7 +147,7 @@ class Detector(object):
         if len(contoursPass) == 0:
             self.__maskPoints = None
             return False
-        self.__maskPoints = self.__RectsFilter(rects=boundRectPass, minW=20, minH=30)
+        self.__maskPoints = RectsFilter(rects=boundRectPass, minW=20, minH=30)
         return True
 
     def DrawMaskPoints(self, image, color=(0, 241, 255), thickness=2):
@@ -181,66 +186,3 @@ class Detector(object):
     def DrawItems(self, image):
         # TODO
         pass
-
-    def __GetContours(self, image, thresh=150):
-        gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        grayBlur = cv.blur(gray, (3, 3))
-        canny = cv.Canny(grayBlur, thresh, thresh * 2)
-        contours = cv.findContours(canny, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)[0]
-        return contours
-
-    def __GetContourProperties(self, contours):
-        centerList = []
-        arcLengthList = []
-        boundRectList = []
-        for contour in contours:
-            poly = cv.approxPolyDP(contour, 3, True)
-            mu = cv.moments(poly)
-            cx = mu['m10'] / (mu['m00'] + 1e-5)
-            cy = mu['m01'] / (mu['m00'] + 1e-5)
-            center = (cx, cy)
-            arcLength = cv.arcLength(poly, True)
-            boundRect = cv.boundingRect(poly)
-            centerList.append(center)
-            arcLengthList.append(arcLength)
-            boundRectList.append(boundRect)
-        return centerList, arcLengthList, boundRectList
-
-    def __RectsFilter(self, rects, minW, minH):
-        res = []
-        while len(rects) > 0:
-            rect = rects.pop(0)
-            while True:
-                changed = False
-                rectsUnused = []
-                for rect2 in rects:
-                    if not self.__RectIsIntersected(rect, rect2):
-                        rectsUnused.append(rect2)
-                        continue
-                    if rect[2] > minW and rect[3] > minH:
-                        res.append(rect)
-                    if rect2[2] > minW and rect2[3] > minH:
-                        res.append(rect2)
-                    rect = self.__RectUnite(rect, rect2)
-                    changed = True
-                rects = rectsUnused
-                if not changed:
-                    break
-            res.append(rect)
-        return res
-
-    def __RectIsIntersected(self, a, b):
-        x = max(a[0], b[0])
-        y = max(a[1], b[1])
-        w = min(a[0] + a[2], b[0] + b[2]) - x
-        h = min(a[1] + a[3], b[1] + b[3]) - y
-        if w < 0 or h < 0:
-            return False
-        return True
-
-    def __RectUnite(self, a, b):
-        x = min(a[0], b[0])
-        y = min(a[1], b[1])
-        w = max(a[0] + a[2], b[0] + b[2]) - x
-        h = max(a[1] + a[3], b[1] + b[3]) - y
-        return x, y, w, h
