@@ -15,5 +15,6 @@ RUN python -m pip install \
   python-xlib
 
 COPY python /mitsudesu
+COPY data /mitsudesu/data
 COPY entrypoint.bash /usr/local/bin/entrypoint.bash
 ENTRYPOINT ["entrypoint.bash"]
