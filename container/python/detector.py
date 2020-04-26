@@ -116,13 +116,33 @@ class Detector(object):
         # TODO
         pass
 
-    def DetectMaskPoints(self, image):
-        # TODO
+    def DetectMaskPoints(self, image, eps=10):
+        contours = self.__GetContours(image)
+        if len(contours) == 0:
+            return False
+        centerList, arcLengthList, boundRectList = self.__GetContourProperties(contours)
+        contoursPass = []
+        boundRectPass = []
+        for contour, center, arcLength, boundRect in zip(contours, centerList, arcLengthList, boundRectList):
+            if boundRect[0] < self.__gameRect[0] + eps:
+                continue
+            if boundRect[1] < self.__gameRect[1] + eps:
+                continue
+            if self.__gameRect[0] + self.__gameRect[2] < boundRect[0] + boundRect[2]:
+                continue
+            if self.__gameRect[1] + self.__gameRect[3] < boundRect[1] + boundRect[3]:
+                continue
+            contoursPass.append(contour)
+            boundRectPass.append(boundRect)
+        if len(contoursPass) == 0:
+            return False
+        self.__maskPoints = self.__RectsFilter(rects=boundRectPass, minW=20, minH=30)
         return True
 
-    def DrawMaskPoints(self, image):
-        # TODO
-        pass
+    def DrawMaskPoints(self, image, color=(0, 241, 255), thickness=2):
+        for maskPoint in self.__maskPoints:
+            x, y, w, h = maskPoint
+            cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def DetectSocialDistance(self, image):
         # TODO
@@ -179,3 +199,42 @@ class Detector(object):
             arcLengthList.append(arcLength)
             boundRectList.append(boundRect)
         return centerList, arcLengthList, boundRectList
+
+    def __RectsFilter(self, rects, minW, minH):
+        res = []
+        while len(rects) > 0:
+            rect = rects.pop(0)
+            while True:
+                changed = False
+                rectsUnused = []
+                for rect2 in rects:
+                    if not self.__RectIsIntersected(rect, rect2):
+                        rectsUnused.append(rect2)
+                        continue
+                    if rect[2] > minW and rect[3] > minH:
+                        res.append(rect)
+                    if rect2[2] > minW and rect2[3] > minH:
+                        res.append(rect2)
+                    rect = self.__RectUnite(rect, rect2)
+                    changed = True
+                rects = rectsUnused
+                if not changed:
+                    break
+            res.append(rect)
+        return res
+
+    def __RectIsIntersected(self, a, b):
+        x = max(a[0], b[0])
+        y = max(a[1], b[1])
+        w = min(a[0] + a[2], b[0] + b[2]) - x
+        h = min(a[1] + a[3], b[1] + b[3]) - y
+        if w < 0 or h < 0:
+            return False
+        return True
+
+    def __RectUnite(self, a, b):
+        x = min(a[0], b[0])
+        y = min(a[1], b[1])
+        w = max(a[0] + a[2], b[0] + b[2]) - x
+        h = max(a[1] + a[3], b[1] + b[3]) - y
+        return x, y, w, h
