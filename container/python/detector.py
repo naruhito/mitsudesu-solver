@@ -4,6 +4,8 @@ from .utils import GetContours
 from .utils import GetContourProperties
 from .utils import CreateRectGroups
 from .utils import RemoveFloor
+from .utils import CreateSvm
+from .utils import CreateHog
 
 import cv2 as cv
 import numpy as np
@@ -20,6 +22,8 @@ class Detector(object):
         self.__enemies = None
         self.__avesans = None
         self.__items = None
+        self.__svm = CreateSvm()
+        self.__hog = CreateHog()
 
     def GetGameRect(self):
         return self.__gameRect
@@ -111,86 +115,41 @@ class Detector(object):
         cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def DetectPlayer(self, image):
-        # TODO
-        return True
+        objectRects = self.__DetectObjects(image)
+        if objectRects is None:
+            self.__player = None
+            return False
+        descriptors = []
+        for objectRect in objectRects:
+            x, y, w, h = objectRect
+            roi = RemoveFloor(image[y:(y + h), x:(x + w)])
+            roi = cv.resize(roi, (64, 128))
+            des = self.__hog.compute(roi)
+            descriptors.append(des)
+        predictions = self.__svm[0].predict(np.array(descriptors))[1]
+        dataTypes = self.__svm[1]
+        candidates = []
+        for objectRect, prediction in zip(objectRects, predictions):
+            prediction = dataTypes[int(prediction[0])]
+            if prediction == 'player':
+                candidates.append(objectRect)
+        if len(candidates) == 0:
+            self.__player = None
+            return False
+        for candidate in candidates:
+            x, y, w, h = candidate
+            if y < self.__gameRect[1] + self.__gameRect[3] / 2.0:
+                continue
+            self.__player = candidate
+            return True
+        self.__player = None
+        return False
 
-    def DrawPlayer(self, image):
-        # TODO
-        # winSize = (20,20)
-        # blockSize = (10,10)
-        # blockStride = (5,5)
-        # cellSize = (10,10)
-        # nbins = 9
-        # derivAperture = 1
-        # winSigma = -1.
-        # histogramNormType = 0
-        # L2HysThreshold = 0.2
-        # gammaCorrection = 1
-        # nlevels = 64
-        # useSignedGradients = True
-        # hog = cv.HOGDescriptor(winSize,blockSize,blockStride,cellSize,nbins,derivAperture,winSigma,histogramNormType,L2HysThreshold,gammaCorrection,nlevels, useSignedGradients)
-
-        # data = []
-        # descriptors = []
-        # from .utils import RemoveFloor
-        # data.append(RemoveFloor(cv.imread('/data/maskpoints/maskpoints-2.png')))
-        # data.append(RemoveFloor(cv.imread('/data/maskpoints/maskpoints-1.png')))
-        # data.append(RemoveFloor(cv.imread('/data/level/l.png')))
-        # data.append(RemoveFloor(cv.imread('/data/level/1.png')))
-        # data.append(RemoveFloor(cv.imread('/data/level/v.png')))
-        # data.append(RemoveFloor(cv.imread('/data/level/e.png')))
-        # data.append(RemoveFloor(cv.imread('/data/player/player-3.png')))
-        # data.append(RemoveFloor(cv.imread('/data/player/player-1.png')))
-        # data.append(RemoveFloor(cv.imread('/data/player/player-2.png')))
-        # data.append(RemoveFloor(cv.imread('/data/enemies/enemies-3.png')))
-        # data.append(RemoveFloor(cv.imread('/data/enemies/enemies-2.png')))
-        # data.append(RemoveFloor(cv.imread('/data/enemies/enemies-1.png')))
-        # for img in data:
-        #     img2 = cv.resize(img, (64, 128))
-        #     descriptors.append(hog.compute(img2))
-        # # import IPython; IPython.embed()
-
-        # import numpy as np
-
-        # # data2 = []
-        # # for img in data:
-        # #     hoge = img.reshape(img.shape[0] * img.shape[1] * 3)
-        # #     data2.append(hoge)
-        # # data = np.array(data2, np.float32)
-
-        # svm = cv.ml.SVM_create()
-        # svm.setType(cv.ml.SVM_C_SVC)
-        # svm.setKernel(cv.ml.SVM_RBF)
-        # svm.setC(12.5)
-        # svm.setGamma(0.50625)
-
-        # positive_images = descriptors[:2]
-        # negative_images = descriptors[2:]
-        # images = np.r_[positive_images, negative_images]
-
-        # positive_labels = np.ones(len(data[:2]), np.int32)
-        # negative_labels = np.zeros(len(data[2:]), np.int32)
-        # labels = np.array([np.r_[positive_labels, negative_labels]])
-
-        # # import IPython; IPython.embed()
-        # svm.train(images, cv.ml.ROW_SAMPLE, labels)
-
-        # testResponse = svm.predict(images)
-        # # import IPython; IPython.embed()
-
-        # resres = []
-        # for i, objectRect in enumerate(objectRects):
-        #     x, y, w, h = objectRect
-        #     roi = RemoveFloor(image[y:y+h, x:x+w])
-        #     roi = cv.resize(roi, (64, 128))
-        #     des = hog.compute(roi)
-        #     # svm.predict(np.r_[[des]])
-        #     # import IPython; IPython.embed()
-        #     bbb = svm.predict(np.r_[[des]])
-        #     cv.imwrite('/image/{}.png'.format(i), roi)
-        #     if int(bbb[1][0][0]) == 1:
-        #         resres.append(objectRect)
-        pass
+    def DrawPlayer(self, image, color=(0, 241, 255), thickness=2):
+        if self.__player is None:
+            return
+        x, y, w, h = self.__player
+        cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def DetectLevel(self, image):
         # TODO
