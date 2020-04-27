@@ -205,7 +205,28 @@ class Detector(object):
             if int(bbb[1][0][0]) == 1:
                 resres.append(objectRect)
 
-        self.__maskPoints = resres
+
+        img_rgb = image
+        
+        template = cv.imread('data/player/player-1.png', 0)
+        # template = cv.imread('data/enemies/enemies-2.png', 0)
+        
+        import numpy as np
+        
+        img_gray = cv.cvtColor(img_rgb, cv.COLOR_BGR2GRAY)
+        
+        
+        w, h = template.shape[::-1]
+        
+        res = cv.matchTemplate(img_gray,template,cv.TM_CCOEFF_NORMED)
+        threshold = 0.8
+        loc = np.where( res >= threshold)
+        resres2 = []
+        for pt in zip(*loc[::-1]):
+            x, y, w, h = pt[0], pt[1], w, h
+            resres2.append((x, y, w, h))
+
+        self.__maskPoints = resres2
         return True
 
     def DrawMaskPoints(self, image, color=(0, 241, 255), thickness=2):
