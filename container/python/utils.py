@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from os import listdir
+from os import path
+from glob import glob
+
 import cv2 as cv
+import numpy as np
 
 def GetContours(image, thresh=150):
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -26,7 +31,7 @@ def GetContourProperties(contours):
         boundRectList.append(boundRect)
     return centerList, arcLengthList, boundRectList
 
-def RectsFilter(rects, minW, minH):
+def CreateRectGroups(rects, minW, minH):
     res = []
     while len(rects) > 0:
         rect = rects.pop(0)
@@ -70,3 +75,53 @@ def RemoveFloor(image, hsvMin=(0, 0, 185), hsvMax=(0, 0, 195)):
     mask = 255 - cv.inRange(hsv, hsvMin, hsvMax)
     imageWithoutFloor = cv.bitwise_and(image, image, None, mask)
     return imageWithoutFloor
+
+def CreateHog(winSize=(20, 20),
+              blockSize=(10, 10),
+              blockStride=(5, 5),
+              cellSize=(10, 10),
+              nbins=9,
+              derivAperture=1,
+              winSigma=-1,
+              histogramNormType=0,
+              L2HysThreshold=0.2,
+              gammaCorrection=1,
+              nlevels=64,
+              useSignedGradients=True):
+    return cv.HOGDescriptor(winSize, blockSize, blockStride, cellSize, nbins, derivAperture, winSigma,
+                            histogramNormType, L2HysThreshold, gammaCorrection, nlevels, useSignedGradients)
+
+def CreateSvm():
+    data = []
+    dataTypes = []
+    dataDir = path.join('/', 'data')
+    for i, subdir in enumerate(listdir(dataDir)):
+        dataTypes.append(subdir)
+        data.append([])
+        for dataPath in glob(path.join(dataDir, subdir, '*.png')):
+            data[i].append(RemoveFloor(cv.imread(dataPath)))
+
+    hog = CreateHog()
+    descriptors = []
+    for i, images in enumerate(data):
+        descriptors.append([])
+        for image in images:
+            resized = cv.resize(image, (64, 128))
+            descriptors[i].append(hog.compute(resized))
+
+    svm = cv.ml.SVM_create()
+    svm.setGamma(0.50625)
+    svm.setC(12.5)
+    svm.setKernel(cv.ml.SVM_RBF)
+    svm.setType(cv.ml.SVM_C_SVC)
+
+    trainLabels = []
+    trainDescriptors = []
+    for label, descriptor in enumerate(descriptors):
+        for des in descriptor:
+            trainLabels.append(label)
+            trainDescriptors.append(des)
+    trainLabels = np.array(trainLabels)
+    trainDescriptors = np.array(trainDescriptors)
+    svm.train(trainDescriptors, cv.ml.ROW_SAMPLE, trainLabels)
+    return svm, dataTypes

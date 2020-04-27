@@ -43,6 +43,7 @@ class Solver(object):
 
     def SolveSocialDistance(self):
         image = self.__x11.GetImage()
+        self.__detector.DetectPlayer(image)
         self.__detector.DetectLevel(image)
         self.__detector.DetectMaskPoints(image)
         self.__detector.DetectSocialDistance(image)
@@ -61,6 +62,7 @@ class Solver(object):
         )
         self.__x11.ProcessActoin(action=socialDistanceAction)
         self.__detector.DrawGameRect(image)
+        self.__detector.DrawPlayer(image)
         self.__detector.DrawLevel(image)
         self.__detector.DrawMaskPoints(image)
         self.__detector.DrawSocialDistance(image)
