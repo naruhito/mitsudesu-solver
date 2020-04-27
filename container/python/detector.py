@@ -152,10 +152,42 @@ class Detector(object):
         cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def DetectLevel(self, image):
-        # TODO
+        objectRects = self.__DetectObjects(image)
+        if objectRects is None:
+            self.__level = None
+            return False
+        descriptors = []
+        for objectRect in objectRects:
+            x, y, w, h = objectRect
+            roi = RemoveFloor(image[y:(y + h), x:(x + w)])
+            roi = cv.resize(roi, (64, 128))
+            des = self.__hog.compute(roi)
+            descriptors.append(des)
+        predictions = self.__svm[0].predict(np.array(descriptors))[1]
+        dataTypes = self.__svm[1]
+        candidates = []
+        for objectRect, prediction in zip(objectRects, predictions):
+            prediction = dataTypes[int(prediction[0])]
+            if prediction == 'level':
+                candidates.append(objectRect)
+        if len(candidates) == 0:
+            self.__level = None
+            return False
+        candidatesPass = []
+        for candidate in candidates:
+            x, y, w, h = candidate
+            if x > self.__gameRect[0] + self.__gameRect[2] / 2.0:
+                continue
+            if y < self.__gameRect[1] + self.__gameRect[3] / 2.0:
+                continue
+            candidatesPass.append(candidate)
+        if len(candidatesPass) == 0:
+            self.__level = None
+            return False
+        self.__level = candidatesPass
         return True
 
-    def DrawLevel(self, image, color=(255, 255, 255), thickness=2):
+    def DrawLevel(self, image, color=(255, 0, 0), thickness=2):
         if self.__level is None:
             return
         for lvl in self.__level:
