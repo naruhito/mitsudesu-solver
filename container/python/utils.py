@@ -26,7 +26,7 @@ def GetContourProperties(contours):
         boundRectList.append(boundRect)
     return centerList, arcLengthList, boundRectList
 
-def RectsFilter(rects, minW, minH):
+def CreateRectGroups(rects, minW, minH):
     res = []
     while len(rects) > 0:
         rect = rects.pop(0)

@@ -2,7 +2,7 @@
 
 from .utils import GetContours
 from .utils import GetContourProperties
-from .utils import RectsFilter
+from .utils import CreateRectGroups
 
 import cv2 as cv
 
@@ -267,5 +267,5 @@ class Detector(object):
             boundRectPass.append(boundRect)
         if len(contoursPass) == 0:
             return None
-        objectRects = RectsFilter(rects=boundRectPass, minW=minW, minH=minH)
+        objectRects = CreateRectGroups(rects=boundRectPass, minW=minW, minH=minH)
         return objectRects
