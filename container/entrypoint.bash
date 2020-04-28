@@ -30,7 +30,7 @@ function create-displays() {
     done
   done
   DISPLAY=${DISPLAYS[1]} firefox ${URL} &
-  DISPLAY=${DISPLAYS[0]} fluxbox > /tmp/fluxbox.log 2>&1 &
+  (DISPLAY=${DISPLAYS[0]} fluxbox > /tmp/fluxbox.log 2>&1 &) && sleep 1
   DISPLAY=${DISPLAYS[0]} xtigervncviewer localhost::${VNCPORTS[1]} > /tmp/tiger-vncviewer-1.log 2>&1 &
   DISPLAY=${DISPLAYS[0]} xtigervncviewer localhost::${VNCPORTS[2]} > /tmp/tiger-vncviewer-2.log 2>&1 &
 }

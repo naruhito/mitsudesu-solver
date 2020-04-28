@@ -42,33 +42,22 @@ class Solver(object):
         self.__x11.ProcessActoin(action=startNormalAction)
 
     def SolveSocialDistance(self):
-        image = self.__x11.GetImage()
-        self.__detector.DetectPlayer(image)
-        self.__detector.DetectLevel(image)
-        self.__detector.DetectMaskPoints(image)
-        self.__detector.DetectSocialDistance(image)
-        self.__detector.DetectEnemies(image)
-        self.__detector.DetectAvesans(image)
-        self.__detector.DetectItems(image)
+        image = self.__x11.Wait(breakFn=self.__detector.DetectGameObjects)
+        gameRect = self.__detector.GetGameRect()
+        player, level, maskPoints, socialDistance, enemies, avesans, items = self.__detector.GetGameObjects()
         socialDistanceAction = self.__planner.PlanSocialDistanceAction(
-            gameRect=self.__detector.GetGameRect(),
-            player=self.__detector.GetPlayer(),
-            level=self.__detector.GetLevel(),
-            maskPoints=self.__detector.GetMaskPoints(),
-            socialDistance=self.__detector.GetSocialDistance(),
-            enemies=self.__detector.GetEnemies(),
-            avesans=self.__detector.GetAvesans(),
-            items=self.__detector.GetItems(),
+            gameRect=gameRect,
+            player=player,
+            level=level,
+            maskPoints=maskPoints,
+            socialDistance=socialDistance,
+            enemies=enemies,
+            avesans=avesans,
+            items=items,
         )
         self.__x11.ProcessActoin(action=socialDistanceAction)
         self.__detector.DrawGameRect(image)
-        self.__detector.DrawPlayer(image)
-        self.__detector.DrawLevel(image)
-        self.__detector.DrawMaskPoints(image)
-        self.__detector.DrawSocialDistance(image)
-        self.__detector.DrawEnemies(image)
-        self.__detector.DrawAvesans(image)
-        self.__detector.DrawItems(image)
+        self.__detector.DrawGameObjects(image)
         self.__ShowDebugImage(image)
 
     def __ShowDebugImage(self, image, duration=1):

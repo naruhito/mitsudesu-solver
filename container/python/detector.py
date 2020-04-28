@@ -4,8 +4,9 @@ from .utils import GetContours
 from .utils import GetContourProperties
 from .utils import CreateRectGroups
 from .utils import RemoveFloor
-from .utils import CreateSvm
-from .utils import CreateHog
+from .utils import GetTrainedSvm
+from .utils import GetHogDescriptor
+from .utils import ResizeHog
 
 import cv2 as cv
 import numpy as np
@@ -22,8 +23,8 @@ class Detector(object):
         self.__enemies = None
         self.__avesans = None
         self.__items = None
-        self.__svm = CreateSvm()
-        self.__hog = CreateHog()
+        self.__svm = GetTrainedSvm()
+        self.__hog = GetHogDescriptor()
 
     def GetGameRect(self):
         return self.__gameRect
@@ -31,26 +32,8 @@ class Detector(object):
     def GetStartButtonNormalRect(self):
         return self.__startButtonNormalRect
 
-    def GetPlayer(self):
-        return self.__player
-
-    def GetLevel(self):
-        return self.__level
-
-    def GetMaskPoints(self):
-        return self.__maskPoints
-
-    def GetSocialDistance(self):
-        return self.__socialDistance
-
-    def GetEnemies(self):
-        return self.__enemies
-
-    def GetAvesans(self):
-        return self.__avesans
-
-    def GetItems(self):
-        return self.__items
+    def GetGameObjects(self):
+        return self.__player, self.__level, self.__maskPoints, self.__socialDistance, self.__enemies, self.__avesans, self.__items
 
     def DetectGameRect(self, image, width=400, height=500, eps=10):
         contours = GetContours(image)
@@ -72,10 +55,6 @@ class Detector(object):
             return False
         self.__gameRect = boundRectPass[0]
         return True
-
-    def DrawGameRect(self, image, color=(0, 241, 255), thickness=2):
-        x, y, w, h = self.__gameRect
-        cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def DetectStartButtonNormalRect(self, image, width=114, height=53, eps=10):
         contours = GetContours(image)
@@ -110,92 +89,100 @@ class Detector(object):
         self.__startButtonNormalRect = boundRectPass[0]
         return True
 
+    def DetectGameObjects(self, image):
+        contourRects = self.__DetectContourRects(image)
+        if len(contourRects) == 0:
+            self.__ClearGameObjects()
+            return False
+        descriptors = []
+        for contourRect in contourRects:
+            x, y, w, h = contourRect
+            roi = RemoveFloor(image[y:(y + h), x:(x + w)])
+            resized = ResizeHog(roi)
+            des = self.__hog.compute(resized)
+            descriptors.append(des)
+        predictions = self.__svm[0].predict(np.array(descriptors))[1]
+        dataTypes = self.__svm[1]
+        predictedDataTypes = []
+        for prediction in predictions:
+            dataType = dataTypes[int(prediction[0])]
+            predictedDataTypes.append(dataType)
+        self.__ClearGameObjects()
+        self.__DetectPlayer(image, contourRects, predictedDataTypes)
+        self.__DetectLevel(image, contourRects, predictedDataTypes)
+        self.__DetectMaskPoints(image, contourRects, predictedDataTypes)
+        self.__DetectSocialDistance(image, contourRects, predictedDataTypes)
+        self.__DetectEnemies(image, contourRects, predictedDataTypes)
+        self.__DetectAvesans(image, contourRects, predictedDataTypes)
+        self.__DetectItems(image, contourRects, predictedDataTypes)
+        return True
+
+    def DrawGameRect(self, image, color=(0, 241, 255), thickness=2):
+        x, y, w, h = self.__gameRect
+        cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
+
     def DrawStartButtonNormalRect(self, image, color=(0, 241, 255), thickness=2):
         x, y, w, h = self.__startButtonNormalRect
         cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def DetectPlayer(self, image):
-        objectRects = self.__DetectObjects(image)
-        if objectRects is None:
-            self.__player = None
-            return False
-        descriptors = []
-        for objectRect in objectRects:
-            x, y, w, h = objectRect
-            roi = RemoveFloor(image[y:(y + h), x:(x + w)])
-            roi = cv.resize(roi, (64, 128))
-            des = self.__hog.compute(roi)
-            descriptors.append(des)
-        predictions = self.__svm[0].predict(np.array(descriptors))[1]
-        dataTypes = self.__svm[1]
-        candidates = []
-        for objectRect, prediction in zip(objectRects, predictions):
-            prediction = dataTypes[int(prediction[0])]
-            if prediction == 'player':
-                candidates.append(objectRect)
-        if len(candidates) == 0:
-            self.__player = None
-            return False
-        for candidate in candidates:
-            x, y, w, h = candidate
-            if y < self.__gameRect[1] + self.__gameRect[3] / 2.0:
+    def DrawGameObjects(self, image):
+        self.__DrawPlayer(image)
+        self.__DrawLevel(image)
+        self.__DrawMaskPoints(image)
+        self.__DrawSocialDistance(image)
+        self.__DrawEnemies(image)
+        self.__DrawAvesans(image)
+        self.__DrawItems(image)
+
+    def __DetectContourRects(self, image, eps=10, minW=20, minH=30):
+        contours = GetContours(image)
+        centerList, arcLengthList, boundRectList = GetContourProperties(contours)
+        contoursPass = []
+        boundRectPass = []
+        for contour, center, arcLength, boundRect in zip(contours, centerList, arcLengthList, boundRectList):
+            if boundRect[0] < self.__gameRect[0] + eps:
                 continue
-            self.__player = candidate
-            return True
+            if boundRect[1] < self.__gameRect[1] + eps:
+                continue
+            if self.__gameRect[0] + self.__gameRect[2] < boundRect[0] + boundRect[2]:
+                continue
+            if self.__gameRect[1] + self.__gameRect[3] < boundRect[1] + boundRect[3]:
+                continue
+            contoursPass.append(contour)
+            boundRectPass.append(boundRect)
+        contourRects = CreateRectGroups(rects=boundRectPass, minW=minW, minH=minH)
+        return contourRects
+
+    def __ClearGameObjects(self):
         self.__player = None
-        return False
+        self.__level = None
+        self.__maskPoints = None
+        self.__socialDistance = None
+        self.__enemies = None
+        self.__avesans = None
+        self.__items = None
 
-    def DrawPlayer(self, image, color=(0, 241, 255), thickness=2):
-        if self.__player is None:
-            return
-        x, y, w, h = self.__player
-        cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
-
-    def DetectLevel(self, image):
-        objectRects = self.__DetectObjects(image)
-        if objectRects is None:
-            self.__level = None
-            return False
-        descriptors = []
-        for objectRect in objectRects:
-            x, y, w, h = objectRect
-            roi = RemoveFloor(image[y:(y + h), x:(x + w)])
-            roi = cv.resize(roi, (64, 128))
-            des = self.__hog.compute(roi)
-            descriptors.append(des)
-        predictions = self.__svm[0].predict(np.array(descriptors))[1]
-        dataTypes = self.__svm[1]
+    def __DetectPlayer(self, image, contourRects, predictedDataTypes):
+        # TODO
         candidates = []
-        for objectRect, prediction in zip(objectRects, predictions):
-            prediction = dataTypes[int(prediction[0])]
-            if prediction == 'level':
-                candidates.append(objectRect)
+        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
+            if predictedDataType == 'player':
+                candidates.append(gameObjectRect)
         if len(candidates) == 0:
-            self.__level = None
-            return False
-        candidatesPass = []
-        for candidate in candidates:
-            x, y, w, h = candidate
-            if x > self.__gameRect[0] + self.__gameRect[2] / 2.0:
-                continue
-            if y < self.__gameRect[1] + self.__gameRect[3] / 2.0:
-                continue
-            candidatesPass.append(candidate)
-        if len(candidatesPass) == 0:
-            self.__level = None
-            return False
-        self.__level = candidatesPass
-        return True
-
-    def DrawLevel(self, image, color=(255, 0, 0), thickness=2):
-        if self.__level is None:
             return
-        for lvl in self.__level:
-            x, y, w, h = lvl
-            cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
+        self.__player = candidates[0]
 
-    def DetectMaskPoints(self, image, eps=10):
-        objectRects = self.__DetectObjects(image)
+    def __DetectLevel(self, image, contourRects, predictedDataTypes):
+        # TODO
+        candidates = []
+        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
+            if predictedDataType == 'level':
+                candidates.append(gameObjectRect)
+        self.__level = candidates
+
+    def __DetectMaskPoints(self, image, contourRects, predictedDataTypes, eps=10):
+        # TODO
+        objectRects = self.__DetectContourRects(image)
         if objectRects is None:
             self.__maskPoints = None
             return False
@@ -219,64 +206,57 @@ class Detector(object):
         self.__maskPoints = maskPoints
         return True
 
-    def DrawMaskPoints(self, image, color=(255, 255, 255), thickness=2):
+    def __DetectSocialDistance(self, image, contourRects, predictedDataTypes):
+        # TODO
+        return True
+
+    def __DetectEnemies(self, image, contourRects, predictedDataTypes):
+        # TODO
+        return True
+
+    def __DetectAvesans(self, image, contourRects, predictedDataTypes):
+        # TODO
+        return True
+
+    def __DetectItems(self, image, contourRects, predictedDataTypes):
+        # TODO
+        return True
+
+    def __DrawPlayer(self, image, color=(0, 241, 255), thickness=2):
+        # TODO
+        if self.__player is None:
+            return
+        x, y, w, h = self.__player
+        cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
+
+    def __DrawLevel(self, image, color=(255, 0, 0), thickness=2):
+        # TODO
+        if self.__level is None:
+            return
+        for lvl in self.__level:
+            x, y, w, h = lvl
+            cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
+
+    def __DrawMaskPoints(self, image, color=(255, 255, 255), thickness=2):
+        # TODO
         if self.__maskPoints is None:
             return
         for maskPoint in self.__maskPoints:
             x, y, w, h = maskPoint
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def DetectSocialDistance(self, image):
-        # TODO
-        return True
-
-    def DrawSocialDistance(self, image):
+    def __DrawSocialDistance(self, image):
         # TODO
         pass
 
-    def DetectEnemies(self, image):
-        # TODO
-        return True
-
-    def DrawEnemies(self, image):
+    def __DrawEnemies(self, image):
         # TODO
         pass
 
-    def DetectAvesans(self, image):
-        # TODO
-        return True
-
-    def DrawAvesans(self, image):
+    def __DrawAvesans(self, image):
         # TODO
         pass
 
-    def DetectItems(self, image):
-        # TODO
-        return True
-
-    def DrawItems(self, image):
+    def __DrawItems(self, image):
         # TODO
         pass
-
-    def __DetectObjects(self, image, eps=10, minW=20, minH=30):
-        contours = GetContours(image)
-        if len(contours) == 0:
-            return None
-        centerList, arcLengthList, boundRectList = GetContourProperties(contours)
-        contoursPass = []
-        boundRectPass = []
-        for contour, center, arcLength, boundRect in zip(contours, centerList, arcLengthList, boundRectList):
-            if boundRect[0] < self.__gameRect[0] + eps:
-                continue
-            if boundRect[1] < self.__gameRect[1] + eps:
-                continue
-            if self.__gameRect[0] + self.__gameRect[2] < boundRect[0] + boundRect[2]:
-                continue
-            if self.__gameRect[1] + self.__gameRect[3] < boundRect[1] + boundRect[3]:
-                continue
-            contoursPass.append(contour)
-            boundRectPass.append(boundRect)
-        if len(contoursPass) == 0:
-            return None
-        objectRects = CreateRectGroups(rects=boundRectPass, minW=minW, minH=minH)
-        return objectRects

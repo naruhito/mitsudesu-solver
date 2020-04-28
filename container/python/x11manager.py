@@ -18,16 +18,11 @@ class X11Manager(object):
         self.__width = width
         self.__height = height
 
-    def GetImage(self):
-        rawImage = self.__window.get_image(0, 0, self.__width, self.__height, ZPixmap, 0xFFFFFFFF).data
-        pilImage = Image.frombytes('RGB', (self.__width, self.__height), rawImage, 'raw', 'RGBX')
-        return asarray(pilImage)
-
     def Wait(self, breakFn):
         while True:
-            image = self.GetImage()
+            image = self.__GetImage()
             if breakFn(image=image):
-                break
+                return image
             sleep(0.5)
 
     def ProcessActoin(self, action):
@@ -40,3 +35,8 @@ class X11Manager(object):
         sleep(duration)
         fake_input(self.__xdisplay, ButtonRelease, 1)
         self.__xdisplay.sync()
+
+    def __GetImage(self):
+        rawImage = self.__window.get_image(0, 0, self.__width, self.__height, ZPixmap, 0xFFFFFFFF).data
+        pilImage = Image.frombytes('RGB', (self.__width, self.__height), rawImage, 'raw', 'RGBX')
+        return asarray(pilImage)
