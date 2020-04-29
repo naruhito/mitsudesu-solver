@@ -112,6 +112,8 @@ def GetTrainedSvm(svmGamma=0.50625, svmC=12.5):
     for i, subdir in enumerate(listdir(dataDir)):
         dataTypes.append(subdir)
         data.append([])
+        if subdir == 'level':
+            continue
         for dataPath in glob(path.join(dataDir, subdir, '*.png')):
             image = cv.imread(dataPath)
             image = RemoveFloor(image)

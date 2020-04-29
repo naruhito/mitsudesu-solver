@@ -10,6 +10,8 @@ from .utils import GetTrainedSvm
 from .utils import GetHogDescriptor
 from .utils import ResizeHog
 
+from glob import glob
+from os import path
 import cv2 as cv
 import numpy as np
 
@@ -174,30 +176,41 @@ class Detector(object):
             return
         self.__player = candidates[0]
 
-    def __DetectLevel(self, image, contourRects, predictedDataTypes, eps=10, threshold=0.8):
-        # TODO
+    def __DetectLevel(self, image, contourRects, predictedDataTypes, eps=10, threshold=0.5):
+        dataDir = path.join('/', 'data', 'level')
+        templateList = []
+        templateWidthList = []
+        templateHeightList = []
+        for dataPath in glob(path.join(dataDir, '*.png')):
+            template = cv.imread(dataPath)
+            template = RemoveFloor(template)
+            template = RemoveSocialDistance(template)
+            template = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
+            templateWidth, templateHeight = template.shape[::-1]
+            templateList.append(template)
+            templateWidthList.append(templateWidth)
+            templateHeightList.append(templateHeight)
+        image = RemoveFloor(image)
+        image = RemoveSocialDistance(image)
+        gray = cv.cvtColor(RemoveFloor(image), cv.COLOR_BGR2GRAY)
         candidates = []
-        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
-            if predictedDataType == 'level':
-                candidates.append(gameObjectRect)
+        for contourRect in contourRects:
+            x, y, w, h = contourRect
+            roi = gray[y:(y + h), x:(x + w)]
+            for template, templateWidth, templateHeight in zip(templateList, templateWidthList, templateHeightList):
+                if w < templateWidth - eps or h < templateHeight - eps:
+                    continue
+                if w > templateWidth + eps or h > templateHeight + eps:
+                    continue
+                try:
+                    matchingResults = cv.matchTemplate(roi, template, cv.TM_CCOEFF_NORMED)
+                    loc = np.where(matchingResults >= threshold)
+                    if len(loc[0]) > 0:
+                        candidates.append(contourRect)
+                        break
+                except Exception:
+                    pass
         self.__level = candidates
-        # template = RemoveFloor(cv.imread('/data/maskpoints/maskpoints-1.png'))  # try using template matching instead of SVM
-        # template = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
-        # templateWidth, templateHeight = template.shape[::-1]
-        # gray = cv.cvtColor(RemoveFloor(image), cv.COLOR_BGR2GRAY)
-        # maskPoints = []
-        # for contourRect in contourRects:
-        #     x, y, w, h = contourRect
-        #     if w < templateWidth or h < templateHeight:
-        #         continue
-        #     if w > templateWidth + eps or h > templateHeight + eps:
-        #         continue
-        #     roi = gray[y:(y + h), x:(x + w)]
-        #     matchingResults = cv.matchTemplate(roi, template, cv.TM_CCOEFF_NORMED)
-        #     loc = np.where(matchingResults >= threshold)
-        #     if len(loc[0]) > 0:
-        #         maskPoints.append(contourRect)
-        # self.__maskPoints = maskPoints
 
     def __DetectMaskPoints(self, image, contourRects, predictedDataTypes):
         candidates = []
@@ -227,22 +240,43 @@ class Detector(object):
             return
         self.__socialDistance = socialDistance
 
-    def __DetectEnemies(self, image, contourRects, predictedDataTypes):
+    def __DetectEnemies(self, image, contourRects, predictedDataTypes, eps=10):
         candidates = []
         for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
-            if predictedDataType == 'enemies':
-                candidates.append(gameObjectRect)
+            if predictedDataType != 'enemies':
+                continue
+            ok = True
+            for level in self.__level:
+                if abs((level[0] + level[2] / 2.0) - gameObjectRect[0]  + gameObjectRect[2] / 2.0) < eps:
+                    ok = False
+                    break
+                if abs((level[1] + level[3] / 2.0) - gameObjectRect[1]  + gameObjectRect[3] / 2.0) < eps:
+                    ok = False
+                    break
+            if not ok:
+                continue
+            candidates.append(gameObjectRect)
         if len(candidates) == 0:
             return
         self.__enemies = candidates
 
     def __DetectAvesans(self, image, contourRects, predictedDataTypes):
-        # TODO
-        pass
+        candidates = []
+        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
+            if predictedDataType == 'avesans':
+                candidates.append(gameObjectRect)
+        if len(candidates) == 0:
+            return
+        self.__avesans = candidates
 
     def __DetectItems(self, image, contourRects, predictedDataTypes):
-        # TODO
-        pass
+        candidates = []
+        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
+            if predictedDataType == 'items':
+                candidates.append(gameObjectRect)
+        if len(candidates) == 0:
+            return
+        self.__items = candidates
 
     def __DrawPlayer(self, image, color=(0, 241, 255), thickness=2):
         if self.__player is None:
@@ -277,10 +311,16 @@ class Detector(object):
             x, y, w, h = enemy
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawAvesans(self, image):
-        # TODO
-        pass
+    def __DrawAvesans(self, image, color=(0, 241, 255), thickness=2):
+        if self.__avesans is None:
+            return
+        for avesan in avesans:
+            x, y, w, h = avesan
+            cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawItems(self, image):
-        # TODO
-        pass
+    def __DrawItems(self, image, color=(0, 241, 255), thickness=2):
+        if self.__items is None:
+            return
+        for item in items:
+            x, y, w, h = item
+            cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
