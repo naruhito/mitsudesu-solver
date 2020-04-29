@@ -224,7 +224,7 @@ class Detector(object):
         roi = image[y:(y + h), x:(x + w)]
         roi = ExtractSocialDistance(roi)
         roi = np.where(roi > threshold, True, False)
-        xx, yy, _ = np.where(roi == True)
+        xx, yy, _ = np.where(roi)
         if len(xx) == 0:
             return
         a = np.min(xx)
@@ -247,10 +247,10 @@ class Detector(object):
                 continue
             ok = True
             for level in self.__level:
-                if abs((level[0] + level[2] / 2.0) - gameObjectRect[0]  + gameObjectRect[2] / 2.0) < eps:
+                if abs((level[0] + level[2] / 2.0) - gameObjectRect[0] + gameObjectRect[2] / 2.0) < eps:
                     ok = False
                     break
-                if abs((level[1] + level[3] / 2.0) - gameObjectRect[1]  + gameObjectRect[3] / 2.0) < eps:
+                if abs((level[1] + level[3] / 2.0) - gameObjectRect[1] + gameObjectRect[3] / 2.0) < eps:
                     ok = False
                     break
             if not ok:
@@ -314,13 +314,13 @@ class Detector(object):
     def __DrawAvesans(self, image, color=(0, 241, 255), thickness=2):
         if self.__avesans is None:
             return
-        for avesan in avesans:
+        for avesan in self.__avesans:
             x, y, w, h = avesan
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def __DrawItems(self, image, color=(0, 241, 255), thickness=2):
         if self.__items is None:
             return
-        for item in items:
+        for item in self.__items:
             x, y, w, h = item
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
