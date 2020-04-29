@@ -4,6 +4,7 @@ from .utils import GetContours
 from .utils import GetContourProperties
 from .utils import CreateRectGroups
 from .utils import RemoveFloor
+from .utils import RemoveSocialDistance
 from .utils import GetTrainedSvm
 from .utils import GetHogDescriptor
 from .utils import ResizeHog
@@ -98,6 +99,7 @@ class Detector(object):
         for contourRect in contourRects:
             x, y, w, h = contourRect
             roi = RemoveFloor(image[y:(y + h), x:(x + w)])
+            roi = RemoveSocialDistance(roi)
             resized = ResizeHog(roi)
             des = self.__hog.compute(resized)
             descriptors.append(des)
@@ -163,7 +165,6 @@ class Detector(object):
         self.__items = None
 
     def __DetectPlayer(self, image, contourRects, predictedDataTypes):
-        # TODO
         candidates = []
         for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
             if predictedDataType == 'player':
@@ -172,65 +173,66 @@ class Detector(object):
             return
         self.__player = candidates[0]
 
-    def __DetectLevel(self, image, contourRects, predictedDataTypes):
+    def __DetectLevel(self, image, contourRects, predictedDataTypes, eps=10, threshold=0.8):
         # TODO
         candidates = []
         for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
             if predictedDataType == 'level':
                 candidates.append(gameObjectRect)
         self.__level = candidates
+        # template = RemoveFloor(cv.imread('/data/maskpoints/maskpoints-1.png'))  # try using template matching instead of SVM
+        # template = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
+        # templateWidth, templateHeight = template.shape[::-1]
+        # gray = cv.cvtColor(RemoveFloor(image), cv.COLOR_BGR2GRAY)
+        # maskPoints = []
+        # for contourRect in contourRects:
+        #     x, y, w, h = contourRect
+        #     if w < templateWidth or h < templateHeight:
+        #         continue
+        #     if w > templateWidth + eps or h > templateHeight + eps:
+        #         continue
+        #     roi = gray[y:(y + h), x:(x + w)]
+        #     matchingResults = cv.matchTemplate(roi, template, cv.TM_CCOEFF_NORMED)
+        #     loc = np.where(matchingResults >= threshold)
+        #     if len(loc[0]) > 0:
+        #         maskPoints.append(contourRect)
+        # self.__maskPoints = maskPoints
 
-    def __DetectMaskPoints(self, image, contourRects, predictedDataTypes, eps=10):
-        # TODO
-        objectRects = self.__DetectContourRects(image)
-        if objectRects is None:
-            self.__maskPoints = None
-            return False
-        template = RemoveFloor(cv.imread('/data/maskpoints/maskpoints-1.png'))
-        template = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
-        templateWidth, templateHeight = template.shape[::-1]
-        gray = cv.cvtColor(RemoveFloor(image), cv.COLOR_BGR2GRAY)
-        maskPoints = []
-        for objectRect in objectRects:
-            x, y, w, h = objectRect
-            if w < templateWidth or h < templateHeight:
-                continue
-            if w > templateWidth + eps or h > templateHeight + eps:
-                continue
-            roi = gray[y:(y + h), x:(x + w)]
-            matchingResults = cv.matchTemplate(roi, template, cv.TM_CCOEFF_NORMED)
-            threshold = 0.8
-            loc = np.where(matchingResults >= threshold)
-            if len(loc[0]) > 0:
-                maskPoints.append(objectRect)
-        self.__maskPoints = maskPoints
-        return True
+    def __DetectMaskPoints(self, image, contourRects, predictedDataTypes):
+        candidates = []
+        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
+            if predictedDataType == 'maskpoints':
+                candidates.append(gameObjectRect)
+        self.__maskPoints = candidates
 
     def __DetectSocialDistance(self, image, contourRects, predictedDataTypes):
         # TODO
-        return True
+        pass
 
     def __DetectEnemies(self, image, contourRects, predictedDataTypes):
-        # TODO
-        return True
+        candidates = []
+        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
+            if predictedDataType == 'enemies':
+                candidates.append(gameObjectRect)
+        if len(candidates) == 0:
+            return
+        self.__enemies = candidates
 
     def __DetectAvesans(self, image, contourRects, predictedDataTypes):
         # TODO
-        return True
+        pass
 
     def __DetectItems(self, image, contourRects, predictedDataTypes):
         # TODO
-        return True
+        pass
 
     def __DrawPlayer(self, image, color=(0, 241, 255), thickness=2):
-        # TODO
         if self.__player is None:
             return
         x, y, w, h = self.__player
         cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def __DrawLevel(self, image, color=(255, 0, 0), thickness=2):
-        # TODO
         if self.__level is None:
             return
         for lvl in self.__level:
@@ -238,7 +240,6 @@ class Detector(object):
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def __DrawMaskPoints(self, image, color=(255, 255, 255), thickness=2):
-        # TODO
         if self.__maskPoints is None:
             return
         for maskPoint in self.__maskPoints:
@@ -249,9 +250,12 @@ class Detector(object):
         # TODO
         pass
 
-    def __DrawEnemies(self, image):
-        # TODO
-        pass
+    def __DrawEnemies(self, image, color=(0, 0, 255), thickness=2):
+        if self.__enemies is None:
+            return
+        for enemy in self.__enemies:
+            x, y, w, h = enemy
+            cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def __DrawAvesans(self, image):
         # TODO
