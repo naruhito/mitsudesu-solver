@@ -193,7 +193,7 @@ class Detector(object):
         image = RemoveFloor(image)
         image = RemoveSocialDistance(image)
         gray = cv.cvtColor(RemoveFloor(image), cv.COLOR_BGR2GRAY)
-        candidates = []
+        level = []
         for contourRect in contourRects:
             x, y, w, h = contourRect
             roi = gray[y:(y + h), x:(x + w)]
@@ -206,18 +206,18 @@ class Detector(object):
                     matchingResults = cv.matchTemplate(roi, template, cv.TM_CCOEFF_NORMED)
                     loc = np.where(matchingResults >= threshold)
                     if len(loc[0]) > 0:
-                        candidates.append(contourRect)
+                        level.append(contourRect)
                         break
                 except Exception:
                     pass
-        self.__level = candidates
+        self.__level = level
 
     def __DetectMaskPoints(self, image, contourRects, predictedDataTypes):
-        candidates = []
+        maskPoint = []
         for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
             if predictedDataType == 'maskpoints':
-                candidates.append(gameObjectRect)
-        self.__maskPoints = candidates
+                maskPoint.append(gameObjectRect)
+        self.__maskPoints = maskPoint
 
     def __DetectSocialDistance(self, image, contourRects, predictedDataTypes, threshold=100, eps=10):
         x, y, w, h = self.__gameRect
@@ -234,6 +234,8 @@ class Detector(object):
         socialDistance = (x + c, y + a, d - c, b - a)
         if self.__player is None:
             return
+        if abs(socialDistance[2] - socialDistance[3]) > eps:
+            return
         if abs((self.__player[0] + self.__player[2] / 2.0) - (socialDistance[0] + socialDistance[2] / 2.0)) > eps:
             return
         if abs((self.__player[1] + self.__player[3] / 2.0) - (socialDistance[1] + socialDistance[3] / 2.0)) > eps:
@@ -241,42 +243,36 @@ class Detector(object):
         self.__socialDistance = socialDistance
 
     def __DetectEnemies(self, image, contourRects, predictedDataTypes, eps=10):
-        candidates = []
+        enemies = []
         for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
             if predictedDataType != 'enemies':
                 continue
-            ok = True
+            isLevelObject = False
             for level in self.__level:
-                if abs((level[0] + level[2] / 2.0) - gameObjectRect[0] + gameObjectRect[2] / 2.0) < eps:
-                    ok = False
+                if abs((level[0] + level[2] / 2.0) - (gameObjectRect[0] + gameObjectRect[2] / 2.0)) < eps:
+                    isLevelObject = True
                     break
-                if abs((level[1] + level[3] / 2.0) - gameObjectRect[1] + gameObjectRect[3] / 2.0) < eps:
-                    ok = False
+                if abs((level[1] + level[3] / 2.0) - (gameObjectRect[1] + gameObjectRect[3] / 2.0)) < eps:
+                    isLevelObject = True
                     break
-            if not ok:
+            if isLevelObject:
                 continue
-            candidates.append(gameObjectRect)
-        if len(candidates) == 0:
-            return
-        self.__enemies = candidates
+            enemies.append(gameObjectRect)
+        self.__enemies = enemies
 
     def __DetectAvesans(self, image, contourRects, predictedDataTypes):
-        candidates = []
+        avesans = []
         for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
             if predictedDataType == 'avesans':
-                candidates.append(gameObjectRect)
-        if len(candidates) == 0:
-            return
-        self.__avesans = candidates
+                avesans.append(gameObjectRect)
+        self.__avesans = avesans
 
     def __DetectItems(self, image, contourRects, predictedDataTypes):
-        candidates = []
+        items = []
         for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
             if predictedDataType == 'items':
-                candidates.append(gameObjectRect)
-        if len(candidates) == 0:
-            return
-        self.__items = candidates
+                items.append(gameObjectRect)
+        self.__items = items
 
     def __DrawPlayer(self, image, color=(0, 241, 255), thickness=2):
         if self.__player is None:
@@ -311,14 +307,14 @@ class Detector(object):
             x, y, w, h = enemy
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawAvesans(self, image, color=(0, 241, 255), thickness=2):
+    def __DrawAvesans(self, image, color=(0, 255, 0), thickness=2):
         if self.__avesans is None:
             return
         for avesan in self.__avesans:
             x, y, w, h = avesan
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawItems(self, image, color=(0, 241, 255), thickness=2):
+    def __DrawItems(self, image, color=(0, 255, 0), thickness=2):
         if self.__items is None:
             return
         for item in self.__items:
