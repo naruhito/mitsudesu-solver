@@ -73,8 +73,17 @@ def RectUnite(a, b):
 def RemoveFloor(image, hsvMin=(0, 0, 185), hsvMax=(0, 0, 195)):
     hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
     mask = 255 - cv.inRange(hsv, hsvMin, hsvMax)
-    imageWithoutFloor = cv.bitwise_and(image, image, None, mask)
-    return imageWithoutFloor
+    return cv.bitwise_and(image, image, None, mask)
+
+def RemoveSocialDistance(image, hsvMin=(40, 0, 0), hsvMax=(45, 255, 255)):
+    hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    mask = 255 - cv.inRange(hsv, hsvMin, hsvMax)
+    return cv.bitwise_and(image, image, None, mask)
+
+def ExtractSocialDistance(image, hsvMin=(40, 0, 0), hsvMax=(45, 255, 255)):
+    hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    mask = cv.inRange(hsv, hsvMin, hsvMax)
+    return cv.bitwise_and(image, image, None, mask)
 
 def GetHogDescriptor(winSize=(20, 20),
                      blockSize=(10, 10),
@@ -103,8 +112,13 @@ def GetTrainedSvm(svmGamma=0.50625, svmC=12.5):
     for i, subdir in enumerate(listdir(dataDir)):
         dataTypes.append(subdir)
         data.append([])
+        if subdir == 'level':  # try using template matching
+            continue
         for dataPath in glob(path.join(dataDir, subdir, '*.png')):
-            data[i].append(RemoveFloor(cv.imread(dataPath)))
+            image = cv.imread(dataPath)
+            image = RemoveFloor(image)
+            image = RemoveSocialDistance(image)
+            data[i].append(image)
 
     hog = GetHogDescriptor()
     descriptors = []
