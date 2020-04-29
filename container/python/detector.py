@@ -260,11 +260,31 @@ class Detector(object):
             enemies.append(gameObjectRect)
         self.__enemies = enemies
 
-    def __DetectAvesans(self, image, contourRects, predictedDataTypes):
+    def __DetectAvesans(self, image, contourRects, predictedDataTypes, eps=10, threshold=0.8):
+        dataPath = path.join('/', 'data', 'avesans', 'avesans-1.png')
+        template = cv.imread(dataPath)
+        template = RemoveFloor(template)
+        template = RemoveSocialDistance(template)
+        template = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
+        templateWidth, templateHeight = template.shape[::-1]
+        image = RemoveFloor(image)
+        image = RemoveSocialDistance(image)
+        gray = cv.cvtColor(RemoveFloor(image), cv.COLOR_BGR2GRAY)
         avesans = []
-        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
-            if predictedDataType == 'avesans':
-                avesans.append(gameObjectRect)
+        for contourRect in contourRects:
+            x, y, w, h = contourRect
+            roi = gray[y:(y + h), x:(x + w)]
+            if w < templateWidth - eps or h < templateHeight - eps:
+                continue
+            if w > templateWidth + eps or h > templateHeight + eps:
+                continue
+            try:
+                matchingResults = cv.matchTemplate(roi, template, cv.TM_CCOEFF_NORMED)
+                loc = np.where(matchingResults >= threshold)
+                if len(loc[0]) > 0:
+                    avesans.append(contourRect)
+            except Exception:
+                pass
         self.__avesans = avesans
 
     def __DetectItems(self, image, contourRects, predictedDataTypes):
@@ -307,14 +327,14 @@ class Detector(object):
             x, y, w, h = enemy
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawAvesans(self, image, color=(0, 255, 0), thickness=2):
+    def __DrawAvesans(self, image, color=(0, 241, 255), thickness=2):
         if self.__avesans is None:
             return
         for avesan in self.__avesans:
             x, y, w, h = avesan
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawItems(self, image, color=(0, 255, 0), thickness=2):
+    def __DrawItems(self, image, color=(0, 241, 255), thickness=2):
         if self.__items is None:
             return
         for item in self.__items:
