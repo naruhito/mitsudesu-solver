@@ -80,6 +80,11 @@ def RemoveSocialDistance(image, hsvMin=(40, 0, 0), hsvMax=(45, 255, 255)):
     mask = 255 - cv.inRange(hsv, hsvMin, hsvMax)
     return cv.bitwise_and(image, image, None, mask)
 
+def ExtractSocialDistance(image, hsvMin=(40, 0, 0), hsvMax=(45, 255, 255)):
+    hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    mask = cv.inRange(hsv, hsvMin, hsvMax)
+    return cv.bitwise_and(image, image, None, mask)
+
 def GetHogDescriptor(winSize=(20, 20),
                      blockSize=(10, 10),
                      blockStride=(5, 5),

@@ -5,6 +5,7 @@ from .utils import GetContourProperties
 from .utils import CreateRectGroups
 from .utils import RemoveFloor
 from .utils import RemoveSocialDistance
+from .utils import ExtractSocialDistance
 from .utils import GetTrainedSvm
 from .utils import GetHogDescriptor
 from .utils import ResizeHog
@@ -205,9 +206,26 @@ class Detector(object):
                 candidates.append(gameObjectRect)
         self.__maskPoints = candidates
 
-    def __DetectSocialDistance(self, image, contourRects, predictedDataTypes):
-        # TODO
-        pass
+    def __DetectSocialDistance(self, image, contourRects, predictedDataTypes, threshold=100, eps=10):
+        x, y, w, h = self.__gameRect
+        roi = image[y:(y + h), x:(x + w)]
+        roi = ExtractSocialDistance(roi)
+        roi = np.where(roi > threshold, True, False)
+        xx, yy, _ = np.where(roi == True)
+        if len(xx) == 0:
+            return
+        a = np.min(xx)
+        b = np.max(xx)
+        c = np.min(yy)
+        d = np.max(yy)
+        socialDistance = (x + c, y + a, d - c, b - a)
+        if self.__player is None:
+            return
+        if abs((self.__player[0] + self.__player[2] / 2.0) - (socialDistance[0] + socialDistance[2] / 2.0)) > eps:
+            return
+        if abs((self.__player[1] + self.__player[3] / 2.0) - (socialDistance[1] + socialDistance[3] / 2.0)) > eps:
+            return
+        self.__socialDistance = socialDistance
 
     def __DetectEnemies(self, image, contourRects, predictedDataTypes):
         candidates = []
@@ -246,9 +264,11 @@ class Detector(object):
             x, y, w, h = maskPoint
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawSocialDistance(self, image):
-        # TODO
-        pass
+    def __DrawSocialDistance(self, image, color=(255, 255, 255), thickness=2):
+        if self.__socialDistance is None:
+            return
+        x, y, w, h = self.__socialDistance
+        cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def __DrawEnemies(self, image, color=(0, 0, 255), thickness=2):
         if self.__enemies is None:
