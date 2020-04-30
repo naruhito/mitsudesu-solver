@@ -10,8 +10,6 @@ from .utils import GetTrainedSvm
 from .utils import GetHogDescriptor
 from .utils import ResizeHog
 
-from glob import glob
-from os import path
 import cv2 as cv
 import numpy as np
 
