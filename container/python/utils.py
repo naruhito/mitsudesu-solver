@@ -105,7 +105,7 @@ def GetHogDescriptor(winSize=(20, 20),
 def ResizeHog(image, w=64, h=128):
     return cv.resize(image, (w, h))
 
-def GetTrainedSvm(svmGamma=0.50625, svmC=12.5):
+def GetTrainedSvm():
     data = []
     dataTypes = []
     dataDir = path.join('/', 'data')
@@ -126,12 +126,6 @@ def GetTrainedSvm(svmGamma=0.50625, svmC=12.5):
             resized = ResizeHog(image)
             descriptors[i].append(hog.compute(resized))
 
-    svm = cv.ml.SVM_create()
-    svm.setGamma(svmGamma)
-    svm.setC(svmC)
-    svm.setKernel(cv.ml.SVM_RBF)
-    svm.setType(cv.ml.SVM_C_SVC)
-
     trainLabels = []
     trainDescriptors = []
     for label, descriptor in enumerate(descriptors):
@@ -140,5 +134,7 @@ def GetTrainedSvm(svmGamma=0.50625, svmC=12.5):
             trainDescriptors.append(des)
     trainLabels = np.array(trainLabels)
     trainDescriptors = np.array(trainDescriptors)
+
+    svm = cv.ml.SVM_create()
     svm.trainAuto(trainDescriptors, cv.ml.ROW_SAMPLE, trainLabels)
     return svm, dataTypes
