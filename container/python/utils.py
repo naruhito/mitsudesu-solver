@@ -112,10 +112,6 @@ def GetTrainedSvm(svmGamma=0.50625, svmC=12.5):
     for i, subdir in enumerate(listdir(dataDir)):
         dataTypes.append(subdir)
         data.append([])
-        if subdir == 'level':  # try using template matching
-            continue
-        if subdir == 'avesans':  # try using template matching
-            continue
         for dataPath in glob(path.join(dataDir, subdir, '*.png')):
             image = cv.imread(dataPath)
             image = RemoveFloor(image)
@@ -144,5 +140,5 @@ def GetTrainedSvm(svmGamma=0.50625, svmC=12.5):
             trainDescriptors.append(des)
     trainLabels = np.array(trainLabels)
     trainDescriptors = np.array(trainDescriptors)
-    svm.train(trainDescriptors, cv.ml.ROW_SAMPLE, trainLabels)
+    svm.trainAuto(trainDescriptors, cv.ml.ROW_SAMPLE, trainLabels)
     return svm, dataTypes

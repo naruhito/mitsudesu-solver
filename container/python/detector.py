@@ -176,48 +176,19 @@ class Detector(object):
             return
         self.__player = candidates[0]
 
-    def __DetectLevel(self, image, contourRects, predictedDataTypes, eps=10, threshold=0.5):
-        dataDir = path.join('/', 'data', 'level')
-        templateList = []
-        templateWidthList = []
-        templateHeightList = []
-        for dataPath in glob(path.join(dataDir, '*.png')):
-            template = cv.imread(dataPath)
-            template = RemoveFloor(template)
-            template = RemoveSocialDistance(template)
-            template = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
-            templateWidth, templateHeight = template.shape[::-1]
-            templateList.append(template)
-            templateWidthList.append(templateWidth)
-            templateHeightList.append(templateHeight)
-        image = RemoveFloor(image)
-        image = RemoveSocialDistance(image)
-        gray = cv.cvtColor(RemoveFloor(image), cv.COLOR_BGR2GRAY)
+    def __DetectLevel(self, image, contourRects, predictedDataTypes):
         level = []
-        for contourRect in contourRects:
-            x, y, w, h = contourRect
-            roi = gray[y:(y + h), x:(x + w)]
-            for template, templateWidth, templateHeight in zip(templateList, templateWidthList, templateHeightList):
-                if w < templateWidth - eps or h < templateHeight - eps:
-                    continue
-                if w > templateWidth + eps or h > templateHeight + eps:
-                    continue
-                try:
-                    matchingResults = cv.matchTemplate(roi, template, cv.TM_CCOEFF_NORMED)
-                    loc = np.where(matchingResults >= threshold)
-                    if len(loc[0]) > 0:
-                        level.append(contourRect)
-                        break
-                except Exception:
-                    pass
+        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
+            if predictedDataType == 'level':
+                level.append(gameObjectRect)
         self.__level = level
 
     def __DetectMaskPoints(self, image, contourRects, predictedDataTypes):
-        maskPoint = []
+        maskPoints = []
         for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
             if predictedDataType == 'maskpoints':
-                maskPoint.append(gameObjectRect)
-        self.__maskPoints = maskPoint
+                maskPoints.append(gameObjectRect)
+        self.__maskPoints = maskPoints
 
     def __DetectSocialDistance(self, image, contourRects, predictedDataTypes, threshold=100, eps=10):
         x, y, w, h = self.__gameRect
@@ -242,49 +213,18 @@ class Detector(object):
             return
         self.__socialDistance = socialDistance
 
-    def __DetectEnemies(self, image, contourRects, predictedDataTypes, eps=10):
+    def __DetectEnemies(self, image, contourRects, predictedDataTypes):
         enemies = []
         for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
-            if predictedDataType != 'enemies':
-                continue
-            isLevelObject = False
-            for level in self.__level:
-                if abs((level[0] + level[2] / 2.0) - (gameObjectRect[0] + gameObjectRect[2] / 2.0)) < eps:
-                    isLevelObject = True
-                    break
-                if abs((level[1] + level[3] / 2.0) - (gameObjectRect[1] + gameObjectRect[3] / 2.0)) < eps:
-                    isLevelObject = True
-                    break
-            if isLevelObject:
-                continue
-            enemies.append(gameObjectRect)
+            if predictedDataType == 'enemies':
+                enemies.append(gameObjectRect)
         self.__enemies = enemies
 
-    def __DetectAvesans(self, image, contourRects, predictedDataTypes, eps=10, threshold=0.8):
-        dataPath = path.join('/', 'data', 'avesans', 'avesans-1.png')
-        template = cv.imread(dataPath)
-        template = RemoveFloor(template)
-        template = RemoveSocialDistance(template)
-        template = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
-        templateWidth, templateHeight = template.shape[::-1]
-        image = RemoveFloor(image)
-        image = RemoveSocialDistance(image)
-        gray = cv.cvtColor(RemoveFloor(image), cv.COLOR_BGR2GRAY)
+    def __DetectAvesans(self, image, contourRects, predictedDataTypes):
         avesans = []
-        for contourRect in contourRects:
-            x, y, w, h = contourRect
-            roi = gray[y:(y + h), x:(x + w)]
-            if w < templateWidth - eps or h < templateHeight - eps:
-                continue
-            if w > templateWidth + eps or h > templateHeight + eps:
-                continue
-            try:
-                matchingResults = cv.matchTemplate(roi, template, cv.TM_CCOEFF_NORMED)
-                loc = np.where(matchingResults >= threshold)
-                if len(loc[0]) > 0:
-                    avesans.append(contourRect)
-            except Exception:
-                pass
+        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
+            if predictedDataType == 'avesans':
+                avesans.append(gameObjectRect)
         self.__avesans = avesans
 
     def __DetectItems(self, image, contourRects, predictedDataTypes):
@@ -300,7 +240,7 @@ class Detector(object):
         x, y, w, h = self.__player
         cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawLevel(self, image, color=(255, 0, 0), thickness=2):
+    def __DrawLevel(self, image, color=(128, 128, 128), thickness=2):
         if self.__level is None:
             return
         for lvl in self.__level:
@@ -327,14 +267,14 @@ class Detector(object):
             x, y, w, h = enemy
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawAvesans(self, image, color=(0, 241, 255), thickness=2):
+    def __DrawAvesans(self, image, color=(255, 0, 0), thickness=2):
         if self.__avesans is None:
             return
         for avesan in self.__avesans:
             x, y, w, h = avesan
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawItems(self, image, color=(0, 241, 255), thickness=2):
+    def __DrawItems(self, image, color=(0, 255, 0), thickness=2):
         if self.__items is None:
             return
         for item in self.__items:
