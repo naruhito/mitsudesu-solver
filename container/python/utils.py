@@ -138,3 +138,39 @@ def GetTrainedSvm():
     svm = cv.ml.SVM_create()
     svm.trainAuto(trainDescriptors, cv.ml.ROW_SAMPLE, trainLabels)
     return svm, dataTypes
+
+def GetRectCenter(rect):
+    x, y, w, h = rect
+    return x + w / 2.0, y + h / 2.0
+
+# def Get  Distance
+
+# # # -*- mode: snippet -*-
+# # # name: deq
+# # # http://www.deqnotes.net/acmicpc/2d_geometry/
+# # # --
+# # // 内積 (dot product) : a⋅b = |a||b|cosθ
+# # double dot(P a, P b) {
+# #     return a.X*b.X + a.Y*b.Y;
+# # }
+
+# # // 外積 (cross product) : a×b = |a||b|sinθ
+# # double cross(P a, P b) {
+# #     return a.X*b.Y - a.Y*b.X;
+# # }
+
+# # // a1,a2を端点とする線分とb1,b2を端点とする線分の交差判定
+# # int is_intersected_ls(P a1, P a2, P b1, P b2) {
+# #     //「二つの線分が同一直線上にある」or「a1=a2またはb1=b2」: 交差していないと判断
+# #     if(abs(cross(a2-a1,b2-b1))<EPS) return false;
+# #     return (cross(a2-a1, b1-a1)*cross(a2-a1, b2-a1) < EPS) &&
+# #         (cross(b2-b1, a1-b1)*cross(b2-b1, a2-b1) < EPS);
+# # }
+
+# # // 点a,bを端点とする線分と点cとの距離
+# # double distance_ls_p(P a, P b, P c) {
+# #     if ( dot(b-a, c-a) < EPS ) return abs(c-a);
+# #     if ( dot(a-b, c-b) < EPS ) return abs(c-b);
+# #     // 平行四辺形の面積/底辺の長さ = 平行四辺形の高さ = 線分と点cとの距離
+# #     return abs(cross(b-a, c-a)) / abs(b-a);
+# # }
