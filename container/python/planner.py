@@ -32,8 +32,8 @@ class Planner(object):
         closestEnemy = self.__GetClosestEnemy(enemies)
         if closestEnemy is None:
             return None
-        x, y = GetRectCenter(closestEnemy)
-        r = self.__GetSocialDistanceRadius()
+        x, y = GetRectCenter(closestEnemy)  # FIXME
+        r = self.__GetSocialDistanceRadius()  # FIXME
         self.__socialDistanceAction = int(x), int(y + r), 1.0  # FIXME
         return self.__socialDistanceAction
 
@@ -43,7 +43,7 @@ class Planner(object):
         return self.__socialDistance[2] / 2.0
 
     def __GetClosestEnemy(self, enemies):
-        if enemies is None or len(enemies) == 0:
+        if enemies is None:
             return None
         if self.__socialDistance is None:
             return None
