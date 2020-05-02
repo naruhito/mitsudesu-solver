@@ -24,7 +24,7 @@ class Planner(object):
         r = int(self.__GetSocialDistanceRadius() * duration)
         cv.circle(image, (x, y), r, color, thickness)
 
-    def PlanSocialDistanceAction(self, player, levels, maskPoints, socialDistance, enemies, avesans, items, duration=0.3, eps=10):
+    def PlanSocialDistanceAction(self, player, levels, maskPoints, socialDistance, enemies, avesans, items, duration=0.3, eps=30):
         self.__socialDistanceAction = None
         if socialDistance is not None:
             self.__socialDistance = socialDistance
