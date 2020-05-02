@@ -26,9 +26,9 @@ class X11Manager(object):
             sleep(0.5)
 
     def ProcessActoin(self, action):
-        x = action[0]
-        y = action[1]
-        duration = action[2]
+        if action is None:
+            return
+        x, y, duration = action
         fake_input(self.__xdisplay, MotionNotify, x=x, y=y)
         fake_input(self.__xdisplay, ButtonPress, 1)
         self.__xdisplay.sync()
