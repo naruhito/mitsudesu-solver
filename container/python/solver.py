@@ -42,8 +42,11 @@ class Solver(object):
         self.__x11.ProcessActoin(action=startNormalAction)
 
     def SolveSocialDistance(self):
-        image = self.__x11.Wait(breakFn=self.__detector.DetectGameObjects)
-        player, levels, maskPoints, socialDistance, enemies, avesans, items = self.__detector.GetGameObjects()
+        while True:
+            image = self.__x11.Wait(breakFn=self.__detector.DetectGameObjects)
+            player, levels, maskPoints, socialDistance, enemies, avesans, items, mitsudesu = self.__detector.GetGameObjects()
+            if mitsudesu is None:
+                break
         socialDistanceAction = self.__planner.PlanSocialDistanceAction(
             player=player,
             levels=levels,
