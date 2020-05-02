@@ -25,6 +25,7 @@ class Detector(object):
         self.__enemies = None
         self.__avesans = None
         self.__items = None
+        self.__mitsudesu = None
         self.__svm = GetTrainedSvm()
         self.__hog = GetHogDescriptor()
 
@@ -35,7 +36,7 @@ class Detector(object):
         return self.__startButtonNormalRect
 
     def GetGameObjects(self):
-        return self.__player, self.__levels, self.__maskPoints, self.__socialDistance, self.__enemies, self.__avesans, self.__items
+        return self.__player, self.__levels, self.__maskPoints, self.__socialDistance, self.__enemies, self.__avesans, self.__items, self.__mitsudesu
 
     def DetectGameRect(self, image, width=400, height=500, eps=10):
         contours = GetContours(image)
@@ -118,6 +119,7 @@ class Detector(object):
         self.__DetectEnemies(image, contourRects, predictedDataTypes)
         self.__DetectAvesans(image, contourRects, predictedDataTypes)
         self.__DetectItems(image, contourRects, predictedDataTypes)
+        self.__DetectMitsudesu(image, contourRects, predictedDataTypes)
         return True
 
     def DrawGameRect(self, image, color=(0, 241, 255), thickness=2):
@@ -136,6 +138,7 @@ class Detector(object):
         self.__DrawEnemies(image)
         self.__DrawAvesans(image)
         self.__DrawItems(image)
+        self.__DrawMitsudesu(image)
 
     def __DetectContourRects(self, image, eps=10, minW=20, minH=30):
         contours = GetContours(image)
@@ -164,6 +167,7 @@ class Detector(object):
         self.__enemies = None
         self.__avesans = None
         self.__items = None
+        self.__mitsudesu = None
 
     def __DetectPlayer(self, image, contourRects, predictedDataTypes):
         candidates = []
@@ -232,6 +236,15 @@ class Detector(object):
                 items.append(gameObjectRect)
         self.__items = items
 
+    def __DetectMitsudesu(self, image, contourRects, predictedDataTypes):
+        candidates = []
+        for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
+            if predictedDataType == 'mitsudesu':
+                candidates.append(gameObjectRect)
+        if len(candidates) == 0:
+            return
+        self.__mitsudesu = candidates[0]
+
     def __DrawPlayer(self, image, color=(0, 241, 255), thickness=2):
         if self.__player is None:
             return
@@ -278,3 +291,9 @@ class Detector(object):
         for item in self.__items:
             x, y, w, h = item
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
+
+    def __DrawMitsudesu(self, image, color=(128, 128, 128), thickness=2):
+        if self.__mitsudesu is None:
+            return
+        x, y, w, h = self.__mitsudesu
+        cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
