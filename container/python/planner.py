@@ -56,9 +56,9 @@ class Planner(object):
         socialDistanceRadius = self.__GetSocialDistanceRadius()
         closestEnemy = None
         for distance, enemy in sorted(zip(distances, enemies), key=lambda x: x[0]):
-            if socialDistanceRadius is not None and distance < socialDistanceRadius:
+            if distance < socialDistanceRadius:
                 continue
-            if enemy[1] + enemy[3] > self.__player[1]:
+            if enemy[1] > self.__player[1]:
                 continue
             closestEnemy = enemy
             break
