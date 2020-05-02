@@ -53,12 +53,11 @@ class Solver(object):
             avesans=avesans,
             items=items,
         )
-        if socialDistanceAction is not None:
-            self.__x11.ProcessActoin(action=socialDistanceAction)
-            self.__planner.DrawSocialDistanceAction(image)
         self.__detector.DrawGameRect(image)
         self.__detector.DrawGameObjects(image)
+        self.__planner.DrawSocialDistanceAction(image)
         self.__ShowDebugImage(image)
+        self.__x11.ProcessActoin(action=socialDistanceAction)
 
     def __ShowDebugImage(self, image, duration=1):
         _display = environ.get('DISPLAY', '')

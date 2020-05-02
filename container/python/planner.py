@@ -17,6 +17,8 @@ class Planner(object):
         return int(x), int(y), 1.0
 
     def DrawSocialDistanceAction(self, image, color=(0, 241, 255), thickness=5):
+        if self.__socialDistanceAction is None:
+            return
         x, y, _ = self.__socialDistanceAction
         r = int(self.__GetSocialDistanceRadius())
         cv.circle(image, (x, y), r, color, thickness)
@@ -32,7 +34,7 @@ class Planner(object):
             return None
         x, y = GetRectCenter(closestEnemy)
         r = self.__GetSocialDistanceRadius()
-        self.__socialDistanceAction = int(x), int(y + r), 1.0
+        self.__socialDistanceAction = int(x), int(y + r), 1.0  # FIXME
         return self.__socialDistanceAction
 
     def __GetSocialDistanceRadius(self):
