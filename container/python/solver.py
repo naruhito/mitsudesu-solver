@@ -38,16 +38,13 @@ class Solver(object):
         self.__x11.Wait(breakFn=self.__detector.DetectGameRect)
         self.__x11.Wait(breakFn=self.__detector.DetectStartButtonNormalRect)
         startButtonNormalRect = self.__detector.GetStartButtonNormalRect()
-        self.__planner.PlanStartNormalAction(startButtonNormalRect=startButtonNormalRect)
-        startNormalAction = self.__planner.GetAction()
+        startNormalAction = self.__planner.PlanStartNormalAction(startButtonNormalRect=startButtonNormalRect)
         self.__x11.ProcessActoin(action=startNormalAction)
 
     def SolveSocialDistance(self):
         image = self.__x11.Wait(breakFn=self.__detector.DetectGameObjects)
-        gameRect = self.__detector.GetGameRect()
         player, level, maskPoints, socialDistance, enemies, avesans, items = self.__detector.GetGameObjects()
-        self.__planner.PlanSocialDistanceAction(
-            gameRect=gameRect,
+        socialDistanceAction = self.__planner.PlanSocialDistanceAction(
             player=player,
             level=level,
             maskPoints=maskPoints,
@@ -56,10 +53,9 @@ class Solver(object):
             avesans=avesans,
             items=items,
         )
-        socialDistanceAction = self.__planner.GetAction()
         if socialDistanceAction is not None:
             self.__x11.ProcessActoin(action=socialDistanceAction)
-            self.__planner.DrawAction(image)
+            self.__planner.DrawSocialDistanceAction(image)
         self.__detector.DrawGameRect(image)
         self.__detector.DrawGameObjects(image)
         self.__ShowDebugImage(image)
