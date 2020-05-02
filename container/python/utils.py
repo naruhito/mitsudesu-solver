@@ -143,34 +143,58 @@ def GetRectCenter(rect):
     x, y, w, h = rect
     return x + w / 2.0, y + h / 2.0
 
-# def Get  Distance
+def IsIntersected(line1, line2, eps=1e-7):
+    a1 = np.array(line1[0])
+    a2 = np.array(line1[1])
+    b1 = np.array(line2[0])
+    b2 = np.array(line2[1])
+    if abs(np.cross(a2 - a1, b2 - b1)) < eps:
+        return False
+    if np.cross(a2 - a1, b1 - a1) * np.cross(a2 - a1, b2 - a1) > eps:
+        return False
+    if np.cross(b2 - b1, a1 - b1) * np.cross(b2 - b1, a2 - b1) > eps:
+        return False
+    return True
 
-# # # -*- mode: snippet -*-
-# # # name: deq
-# # # http://www.deqnotes.net/acmicpc/2d_geometry/
-# # # --
-# # // 内積 (dot product) : a⋅b = |a||b|cosθ
-# # double dot(P a, P b) {
-# #     return a.X*b.X + a.Y*b.Y;
-# # }
+def GetIntersection(line1, line2):
+    xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+    ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
 
-# # // 外積 (cross product) : a×b = |a||b|sinθ
-# # double cross(P a, P b) {
-# #     return a.X*b.Y - a.Y*b.X;
-# # }
+    def det(a, b):
+        return a[0] * b[1] - a[1] * b[0]
 
-# # // a1,a2を端点とする線分とb1,b2を端点とする線分の交差判定
-# # int is_intersected_ls(P a1, P a2, P b1, P b2) {
-# #     //「二つの線分が同一直線上にある」or「a1=a2またはb1=b2」: 交差していないと判断
-# #     if(abs(cross(a2-a1,b2-b1))<EPS) return false;
-# #     return (cross(a2-a1, b1-a1)*cross(a2-a1, b2-a1) < EPS) &&
-# #         (cross(b2-b1, a1-b1)*cross(b2-b1, a2-b1) < EPS);
-# # }
+    div = det(xdiff, ydiff)
+    if div == 0:
+        raise Exception('lines do not intersect')
 
-# # // 点a,bを端点とする線分と点cとの距離
-# # double distance_ls_p(P a, P b, P c) {
-# #     if ( dot(b-a, c-a) < EPS ) return abs(c-a);
-# #     if ( dot(a-b, c-b) < EPS ) return abs(c-b);
-# #     // 平行四辺形の面積/底辺の長さ = 平行四辺形の高さ = 線分と点cとの距離
-# #     return abs(cross(b-a, c-a)) / abs(b-a);
-# # }
+    d = (det(*line1), det(*line2))
+    x = det(d, xdiff) / float(div)
+    y = det(d, ydiff) / float(div)
+    return x, y
+
+def GetPointDistance(a, b):
+    a = np.array(a)
+    b = np.array(b)
+    return np.linalg.norm(a - b)
+
+def GetRectDistance(rect1, rect2):
+    if RectIsIntersected(rect1, rect2):
+        return 0.0
+    c1 = GetRectCenter(rect1)
+    c2 = GetRectCenter(rect2)
+    intersections = []
+    for rect in [rect1, rect2]:
+        x, y, w, h = rect
+        a = (x, y)
+        b = (x, y + h)
+        c = (x + w, y + h)
+        d = (x + w, y)
+        for line in [(a, b), (b, c), (c, d), (d, a)]:
+            if not IsIntersected(line, (c1, c2)):
+                continue
+            intersected = line
+            break
+        intersection = GetIntersection(intersected, (c1, c2))
+        intersections.append(intersection)
+    distance = GetPointDistance(*intersections)
+    return distance
