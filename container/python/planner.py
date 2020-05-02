@@ -47,11 +47,13 @@ class Planner(object):
             return None
         if self.__socialDistance is None:
             return None
-        socialDistanceRadius = self.__GetSocialDistanceRadius()
+        if self.__player is None:
+            return None
         distances = []
         for enemy in enemies:
             distance = GetRectDistance(self.__player, enemy)
             distances.append(distance)
+        socialDistanceRadius = self.__GetSocialDistanceRadius()
         closestEnemy = None
         for distance, enemy in sorted(zip(distances, enemies), key=lambda x: x[0]):
             if socialDistanceRadius is not None and distance < socialDistanceRadius:
