@@ -143,7 +143,7 @@ def GetRectCenter(rect):
     x, y, w, h = rect
     return x + w / 2.0, y + h / 2.0
 
-def IsIntersected(line1, line2, eps=1e-7):
+def LineIsIntersected(line1, line2, eps=1e-7):
     a1 = np.array(line1[0])
     a2 = np.array(line1[1])
     b1 = np.array(line2[0])
@@ -190,7 +190,7 @@ def GetRectDistance(rect1, rect2):
         c = (x + w, y + h)
         d = (x + w, y)
         for line in [(a, b), (b, c), (c, d), (d, a)]:
-            if not IsIntersected(line, (c1, c2)):
+            if not LineIsIntersected(line, (c1, c2)):
                 continue
             intersected = line
             break

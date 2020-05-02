@@ -3,31 +3,44 @@
 from .utils import GetRectCenter
 from .utils import GetRectDistance
 
+import cv2 as cv
+
 class Planner(object):
 
     def __init__(self):
         self.__socialDistanceRadius = None
+        self.__action = None
+
+    def GetAction(self):
+        return self.__action
+
+    def DrawAction(self, image, color=(0, 241, 255), thickness=5):
+        x, y, _ = self.__action
+        if self.__socialDistanceRadius is None:
+            return
+        r = int(self.__socialDistanceRadius)
+        cv.circle(image, (x, y), r, color, thickness)
 
     def PlanStartNormalAction(self, startButtonNormalRect):
         x, y = GetRectCenter(startButtonNormalRect)
-        return x, y, 1.0
+        self.__action = (int(x), int(y), 1.0)
 
-    def PlanSocialDistanceAction(self, gameRect, player, level, maskPoints, socialDistance, enemies, avesans, items, eps=10):
+    def PlanSocialDistanceAction(self, gameRect, player, level, maskPoints, socialDistance, enemies, avesans, items):
         if socialDistance is not None:
             self.__UpdateSocialDistanceRadius(socialDistance)
         if player is None:
-            return self.__GetDefaultAction(gameRect)
+            self.__action = None
+            return
         if enemies is None or len(enemies) == 0:
-            return self.__GetDefaultAction(gameRect)
+            self.__action = None
+            return
         closestEnemy = self.__GetClosestEnemy(player, enemies)
         if closestEnemy is None:
-            return self.__GetDefaultAction(gameRect)
+            self.__action = None
+            return
         x, y = GetRectCenter(closestEnemy)
-        return x, y - eps, 1.0
-
-    def __GetDefaultAction(self, gameRect):
-        x, y = GetRectCenter(gameRect)
-        return x, y, 1.0
+        r = self.__socialDistanceRadius or 50
+        self.__action = int(x), int(y + r), 1.0
 
     def __UpdateSocialDistanceRadius(self, socialDistance, eps=10):
         x, y, w, h = socialDistance
@@ -49,8 +62,8 @@ class Planner(object):
             if self.__socialDistanceRadius is not None:
                 if distance < self.__socialDistanceRadius:
                     continue
-                if enemy[1] < player[0] + player[2]:
-                    continue
+            if enemy[1] + enemy[3] > player[1]:
+                continue
             closestEnemy = enemy
             break
         return closestEnemy
