@@ -43,10 +43,10 @@ class Solver(object):
 
     def SolveSocialDistance(self):
         image = self.__x11.Wait(breakFn=self.__detector.DetectGameObjects)
-        player, level, maskPoints, socialDistance, enemies, avesans, items = self.__detector.GetGameObjects()
+        player, levels, maskPoints, socialDistance, enemies, avesans, items = self.__detector.GetGameObjects()
         socialDistanceAction = self.__planner.PlanSocialDistanceAction(
             player=player,
-            level=level,
+            levels=levels,
             maskPoints=maskPoints,
             socialDistance=socialDistance,
             enemies=enemies,

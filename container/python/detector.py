@@ -19,7 +19,7 @@ class Detector(object):
         self.__gameRect = None
         self.__startButtonNormalRect = None
         self.__player = None
-        self.__level = None
+        self.__levels = None
         self.__maskPoints = None
         self.__socialDistance = None
         self.__enemies = None
@@ -35,7 +35,7 @@ class Detector(object):
         return self.__startButtonNormalRect
 
     def GetGameObjects(self):
-        return self.__player, self.__level, self.__maskPoints, self.__socialDistance, self.__enemies, self.__avesans, self.__items
+        return self.__player, self.__levels, self.__maskPoints, self.__socialDistance, self.__enemies, self.__avesans, self.__items
 
     def DetectGameRect(self, image, width=400, height=500, eps=10):
         contours = GetContours(image)
@@ -112,7 +112,7 @@ class Detector(object):
             predictedDataTypes.append(dataType)
         self.__ClearGameObjects()
         self.__DetectPlayer(image, contourRects, predictedDataTypes)
-        self.__DetectLevel(image, contourRects, predictedDataTypes)
+        self.__DetectLevels(image, contourRects, predictedDataTypes)
         self.__DetectMaskPoints(image, contourRects, predictedDataTypes)
         self.__DetectSocialDistance(image, contourRects, predictedDataTypes)
         self.__DetectEnemies(image, contourRects, predictedDataTypes)
@@ -130,7 +130,7 @@ class Detector(object):
 
     def DrawGameObjects(self, image):
         self.__DrawPlayer(image)
-        self.__DrawLevel(image)
+        self.__DrawLevels(image)
         self.__DrawMaskPoints(image)
         self.__DrawSocialDistance(image)
         self.__DrawEnemies(image)
@@ -158,7 +158,7 @@ class Detector(object):
 
     def __ClearGameObjects(self):
         self.__player = None
-        self.__level = None
+        self.__levels = None
         self.__maskPoints = None
         self.__socialDistance = None
         self.__enemies = None
@@ -174,12 +174,12 @@ class Detector(object):
             return
         self.__player = candidates[0]
 
-    def __DetectLevel(self, image, contourRects, predictedDataTypes):
-        level = []
+    def __DetectLevels(self, image, contourRects, predictedDataTypes):
+        levels = []
         for gameObjectRect, predictedDataType in zip(contourRects, predictedDataTypes):
-            if predictedDataType == 'level':
-                level.append(gameObjectRect)
-        self.__level = level
+            if predictedDataType == 'levels':
+                levels.append(gameObjectRect)
+        self.__levels = levels
 
     def __DetectMaskPoints(self, image, contourRects, predictedDataTypes):
         maskPoints = []
@@ -238,11 +238,11 @@ class Detector(object):
         x, y, w, h = self.__player
         cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
-    def __DrawLevel(self, image, color=(128, 128, 128), thickness=2):
-        if self.__level is None:
+    def __DrawLevels(self, image, color=(128, 128, 128), thickness=2):
+        if self.__levels is None:
             return
-        for lvl in self.__level:
-            x, y, w, h = lvl
+        for level in self.__levels:
+            x, y, w, h = level
             cv.rectangle(image, (x, y), (x + w, y + h), color, thickness)
 
     def __DrawMaskPoints(self, image, color=(255, 255, 255), thickness=2):
