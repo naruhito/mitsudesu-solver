@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Publish Docker
-      uses: elgohr/Publish-Docker-Github-Action@2.14
+      uses: elgohr/Publish-Docker-Github-Action@v5
       with:
         name: naruhito/mitsudesu-solver
         username: ${{ secrets.DOCKER_USERNAME }}
